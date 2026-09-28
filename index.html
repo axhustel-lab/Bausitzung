@@ -1,0 +1,629 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#C8102E"><style>[hidden]{display:none!important}</style></head><body>
+<title>Bausitzung Baukasten</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F2F3F5; --surface: #FFFFFF; --surface-2: #F7F8FA; --ink: #1A1D21; --muted: #5E6673;
+    --line: #D9DDE3; --line-strong: #B9C0C9; --accent: #C8102E; --accent-ink: #FFFFFF; --accent-soft: #FBE9EC;
+    --good: #1E7F4F; --good-soft: #E3F3EA; --warn: #9A6400; --warn-soft: #FFF3D6; --focus: #2F6FED;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius: 10px; --shadow: 0 1px 2px rgba(20,24,30,.06), 0 4px 14px rgba(20,24,30,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #141619; --surface: #1E2126; --surface-2: #262A30; --ink: #ECEEF1; --muted: #9AA3AE;
+      --line: #2F343B; --line-strong: #454C55; --accent: #E5495F; --accent-ink: #FFFFFF; --accent-soft: #3B1C23;
+      --good: #4CC48A; --good-soft: #1A3527; --warn: #E2B25A; --warn-soft: #3A2E12; --focus: #6C9BFF;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #141619; --surface: #1E2126; --surface-2: #262A30; --ink: #ECEEF1; --muted: #9AA3AE;
+    --line: #2F343B; --line-strong: #454C55; --accent: #E5495F; --accent-ink: #FFFFFF; --accent-soft: #3B1C23;
+    --good: #4CC48A; --good-soft: #1A3527; --warn: #E2B25A; --warn-soft: #3A2E12; --focus: #6C9BFF;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding-inline: 16px; padding-block: 0 110px; }
+
+  /* Header */
+  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .top-in { max-width: 720px; margin: 0 auto; padding: 10px 16px 0; }
+  .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .brand h1 .mark { width: 10px; height: 10px; background: var(--accent); clip-path: polygon(50% 0, 100% 100%, 0 100%); display: inline-block; }
+  .brand .meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .steps { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .steps::-webkit-scrollbar { display: none; }
+  .step { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .step[aria-current="step"] { border-color: var(--ink); color: var(--ink); font-weight: 600; }
+  .step .n { font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; background: var(--surface-2); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .step .n.open { background: var(--warn-soft); color: var(--warn); }
+  .step .n.done { background: var(--good-soft); color: var(--good); }
+
+  /* Sections */
+  h2 { font-size: 20px; margin: 22px 0 4px; letter-spacing: -.01em; text-wrap: balance; }
+  .lead { color: var(--muted); margin: 0 0 16px; font-size: 14px; max-width: 60ch; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+
+  /* Variant cards */
+  .variants { display: grid; gap: 10px; margin-top: 12px; }
+  .vcard { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; display: grid; gap: 4px; box-shadow: var(--shadow); }
+  .vcard:hover { border-color: var(--line-strong); }
+  .vcard .t { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+  .vcard .k { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+  .vcard .d { color: var(--muted); font-size: 13.5px; }
+  .project { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  @media (max-width: 460px) { .project { grid-template-columns: 1fr; } }
+
+  /* Item cards */
+  .items { display: grid; gap: 10px; }
+  .item { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 10px; }
+  .item.out { background: var(--surface-2); border-style: dashed; }
+  .item.out .fields, .item.out .preview, .item.out .opts { display: none; }
+  .item.open-state { border-left: 3px solid var(--warn); }
+  .item.star { border-color: var(--accent); }
+  .item-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .item-h .l { font-weight: 600; font-size: 14.5px; }
+  .item-h .l small { display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; margin-top: 1px; }
+  .item.star .l::before { content: "Nie vergessen"; display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; margin-right: 8px; vertical-align: 2px; }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; flex: 0 0 auto; }
+  .seg button { border: 0; background: transparent; padding: 5px 10px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--muted); }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button.on-in { background: var(--good-soft); color: var(--good); font-weight: 600; }
+  .seg button.on-out { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+  .opts { display: grid; gap: 6px; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; background: var(--surface); }
+  .opt.sel { border-color: var(--ink); background: var(--surface-2); }
+  .opt input { margin-top: 3px; accent-color: var(--accent); }
+  .opt .ol { font-weight: 600; font-size: 13.5px; }
+  .opt .od { font-size: 12.5px; color: var(--muted); }
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 10px; }
+  .field { display: grid; gap: 3px; }
+  .field.wide { grid-column: 1 / -1; }
+  .field label { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+  .field input, .field select, .field textarea, .pfield input { width: 100%; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); color: var(--ink); font-size: 14px; }
+  .field textarea { min-height: 56px; resize: vertical; }
+  .preview { font-family: var(--mono); font-size: 12.5px; line-height: 1.5; color: var(--ink); background: var(--surface-2); border-radius: 7px; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
+  .preview .ph { color: var(--accent); font-weight: 500; }
+  .custom { border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 8px; }
+  .custom textarea { width: 100%; min-height: 48px; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); resize: vertical; }
+  .customs { display: grid; gap: 6px; }
+  .cline { display: flex; gap: 8px; align-items: flex-start; font-family: var(--mono); font-size: 12.5px; background: var(--surface-2); padding: 6px 10px; border-radius: 7px; }
+  .cline span { flex: 1; white-space: pre-wrap; }
+
+  /* Buttons */
+  .btn { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.small { padding: 4px 10px; font-size: 12.5px; font-weight: 500; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn.copied { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+
+  /* Bottom bar */
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .bar-in { max-width: 720px; margin: 0 auto; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+  .bar .status { font-size: 12.5px; color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Output */
+  .out-sec { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+  .out-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+  .out-h .t { font-weight: 600; }
+  .out-h .t small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 12.5px; }
+  .lines { display: grid; }
+  .line { display: flex; gap: 10px; align-items: flex-start; padding: 8px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; line-height: 1.5; }
+  .line:last-child { border-bottom: 0; }
+  .line .n { color: var(--muted); flex: 0 0 20px; font-variant-numeric: tabular-nums; }
+  .line .tx { flex: 1; white-space: pre-wrap; word-break: break-word; }
+  .line .ph { color: var(--accent); font-weight: 500; }
+  .line .cp { flex: 0 0 auto; }
+  .notice { border-radius: var(--radius); padding: 10px 14px; font-size: 13.5px; margin-bottom: 12px; }
+  .notice.warn { background: var(--warn-soft); color: var(--warn); }
+  .notice.good { background: var(--good-soft); color: var(--good); }
+  .rowbtns { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
+  .fallback { position: fixed; left: -9999px; top: 0; }
+  .confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13.5px; }
+</style>
+
+<div class="top"><div class="top-in">
+  <div class="brand">
+    <h1><span class="mark"></span>Bausitzung Baukasten</h1>
+    <div class="meta" id="meta"></div>
+  </div>
+  <div class="steps" id="steps"></div>
+</div></div>
+
+<div class="wrap" id="view"></div>
+
+<div class="bar" id="bar"><div class="bar-in">
+  <button class="btn" id="btnPrev">Zurück</button>
+  <div class="status" id="barStatus"></div>
+  <button class="btn primary" id="btnNext">Weiter</button>
+</div></div>
+
+<textarea class="fallback" id="fallback" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+// ============================================================ Inhalte
+const VARIANTS = {
+  1: { k: "V1", name: "Ersatzanlage", desc: "Komplettersatz der Altanlage, in der Regel Anlage mit Maschinenraum auf neue maschinenraumlose Anlage. Schienen und Schachttüren werden ersetzt." },
+  2: { k: "V2", name: "Modernisierung (Seil)", desc: "Standard-Mod: neue Steuerung, Antrieb, Seile, Tableaus und Drücker, evtl. Kabinentürantrieb. Maschinenraum, Schienen, Kabine und Türen bleiben." },
+  3: { k: "V3", name: "Modernisierung Hydraulisch", desc: "Neues Aggregat, Steuerung, Ventilblock, Tableaus und Drücker. Zylinder bleibt (Ersatz als Option). Maschinenraum bleibt." },
+};
+const SECTIONS = [
+  { id: "org", name: "Organisation" },
+  { id: "dem", name: "Demonteur" },
+  { id: "ele", name: "Elektriker" },
+  { id: "bau", name: "Baumeister" },
+  { id: "sch", name: "Schlosser" },
+  { id: "mal", name: "Maler" },
+  { id: "gip", name: "Gipser" },
+  { id: "hin", name: "Allgemeine Hinweise" },
+];
+
+// Felder: key -> {l: Label, t: Typ, ph: Platzhaltertext im Protokoll, o: Optionen, d: Default}
+const F = {
+  parkAnz: { l: "Anzahl Parkplätze", t: "number", ph: "Anzahl" },
+  parkOrt: { l: "Ort Parkplätze", ph: "Ort" },
+  parkWer: { l: "Bewilligung durch", t: "select", o: ["Verwaltung", "Hauswart", "Bauherr"] },
+  zufahrtOrt: { l: "Zufahrt bis", ph: "Ort" },
+  abladeOrt: { l: "Abladeplatz", ph: "Ort" },
+  depotOrt: { l: "Materialdepot", t: "select", o: ["gemäss Foto", "im Velokeller", "in der Einfahrt", "vor dem Gebäude", "in der Garage", "im Keller"] },
+  depotZus: { l: "Ergänzung (optional)", opt: true, hint: "z. B. abschliessbar, Schlüssel bei Hauswart" },
+  toiOrt: { l: "Standort Toi-Toi", ph: "Ort" },
+  wcOrt: { l: "WC im Gebäude", ph: "Ort" },
+  tresorOrt: { l: "Ort Tresor", ph: "Ort", hint: "z. B. links neben Hauseingang" },
+  tresorCode: { l: "Code AS-Tresor", ph: "Code", keep: true, hint: "wird im Browser gemerkt" },
+  tresorBis: { l: "Deponiert bis", t: "date" },
+  tresorCodeK: { l: "Code Kundentresor", ph: "____" },
+  schlAnz: { l: "Anzahl Hausschlüssel", t: "number", ph: "Anzahl" },
+  schlDatum: { l: "Übergabe am", t: "date" },
+  azVon: { l: "Arbeitszeit von", t: "time", d: "07:00" },
+  azBis: { l: "Arbeitszeit bis", t: "time", d: "17:00" },
+  laermZeiten: { l: "Lärmintensive Arbeiten", d: "08:00–12:00 / 13:30–17:00 Uhr" },
+  aushangWer: { l: "Aushang durch", t: "select", o: ["Verwaltung", "AS"] },
+  aushangBis: { l: "Aushang bis", t: "date" },
+  endrWer: { l: "Endreinigung durch", t: "select", o: ["Bauherr", "AS"] },
+  hwName: { l: "Hauswart Name", ph: "Name" },
+  hwTel: { l: "Hauswart Telefon", ph: "Telefon" },
+  hwZeit: { l: "Erreichbar", ph: "Zeiten" },
+  besonderes: { l: "Besonderes", t: "textarea", ph: "…", wide: true },
+  mrSchloss: { l: "Schloss", t: "select", o: ["erfüllt Norm", "wird durch Schlosser ersetzt"] },
+  mrZugang: { l: "Zugang MR über", t: "select", o: ["Treppe", "Leiter", "Dachluke", "Aussentreppe"] },
+  mrSchlAnz: { l: "Anzahl MR-Schlüssel", t: "number", ph: "Anzahl" },
+  mrSchlDatum: { l: "Übergabe am", t: "date" },
+  oelZufahrt: { l: "Zufahrt Öllieferung bis", ph: "Ort" },
+  oelLiter: { l: "Ölmenge neu (Liter)", t: "number", ph: "x" },
+
+  demDatum: { l: "Demontage am", t: "date" },
+  demDauer: { l: "Dauer (Arbeitstage)", t: "number", ph: "x" },
+  demName: { l: "Ansprechperson Demonteur", ph: "Name" },
+  demTel: { l: "Telefon", ph: "Telefon" },
+  muldeM3: { l: "Mulde (m³)", t: "number", ph: "x" },
+  muldeWer: { l: "Bestellt durch", t: "select", o: ["Demonteur", "AS", "Baumeister", "Verwaltung"] },
+  muldeOrt: { l: "Stellplatz", ph: "Ort" },
+  muldeBew: { l: "Bewilligung öffentl. Grund durch", t: "select", o: ["Demonteur", "Verwaltung", "nicht nötig"] },
+  abdMat: { l: "Abdeckung mit", t: "select", o: ["Hartfaserplatten", "Vlies", "Karton", "Hartfaserplatten und Vlies"] },
+  abdM2: { l: "Fläche (m²)", t: "number", ph: "x" },
+  abdBis: { l: "Transportweg bis", ph: "Stockwerk", hint: "z. B. 3. OG / Maschinenraum" },
+  abdWer: { l: "Ausführung durch", t: "select", o: ["Demonteur", "Baumeister"] },
+  absperr: { l: "Absperrung", t: "select", o: ["die bestehenden Schachttüren", "Absperrgitter des Demonteurs", "Absperrgitter, geliefert durch Baumeister"] },
+  asbest: { l: "Schadstoffbericht", t: "select", o: ["liegt vor", "liegt nicht vor"] },
+  kernAnz: { l: "Anzahl Kernbohrungen", t: "number", d: "2" },
+  kernD: { l: "Durchmesser (cm)", t: "number", d: "8" },
+  kernOrt: { l: "Ort Kernbohrung", ph: "Ort" },
+  kernStock: { l: "Stockwerk", ph: "Stockwerk", hint: "z. B. 3. OG / UG" },
+  kernZweck: { l: "Zweck", t: "select", o: ["LDU", "Kabeldurchführung Maschinenraum–Schacht", "Hydraulikleitung"] },
+  uebDatum: { l: "Übergabe Schacht am", t: "date" },
+  hydLiter: { l: "Altöl (Liter)", t: "number", ph: "x" },
+  hydLeitung: { l: "Hydraulikleitung", t: "select", o: ["bleibt und wird gespült", "wird ersetzt"] },
+
+  provOrt: { l: "Ort Bauprovisorium", ph: "Ort" },
+  provDatum: { l: "Bereit am", t: "date" },
+  freiDatum: { l: "Freischalten am", t: "date" },
+  freiZeit: { l: "ca. Uhrzeit", t: "time", d: "09:00" },
+  absich: { l: "Absicherung", t: "select", o: ["3x 16 A", "3x 25 A", "3x 32 A"] },
+  absichKraft: { l: "Absicherung Kraft Lift", t: "select", o: ["3x 16 A", "3x 20 A", "3x 25 A", "3x 32 A"] },
+  absichLicht: { l: "Absicherung Licht Lift", t: "select", o: ["1x 10 A", "1x 13 A", "1x 16 A"] },
+  fuenfLeiter: { l: "5-Leiter mit Neutralleiter", t: "select", o: ["vorhanden", "nicht vorhanden – durch Elektriker zu erstellen", "durch Elektriker zu prüfen"] },
+  lanBis: { l: "LAN bereit bis", t: "date" },
+  absichHyd: { l: "Absicherung", t: "select", o: ["3x 25 A träge", "3x 32 A träge", "3x 40 A träge"] },
+  anlaufA: { l: "Anlaufstrom (A)", t: "number", ph: "x" },
+  zulMm2: { l: "Zuleitung min. (mm²)", t: "number", ph: "x" },
+  zulStatus: { l: "Zuleitung", t: "select", o: ["bleibt", "wird ersetzt"] },
+  hsOrt: { l: "Ort Hauptschalter", ph: "Ort Steuerung" },
+  eleBis: { l: "Fertig bis", t: "date" },
+  anschlDatum: { l: "Anschluss ca. am", t: "date" },
+  stkOrt: { l: "Ort Steckdose", t: "select", o: ["beim Steuerschrank", "im Schachtkopf", "im Maschinenraum beim Steuerschrank"] },
+  schBelWer: { l: "Schachtbeleuchtung", t: "select", o: ["Lieferung AS, Anschluss Elektriker", "Lieferung und Montage Elektriker"] },
+  lan: { l: "Netzwerk", t: "select", o: ["nicht nötig", "LAN-Anschluss beim Steuerschrank bereitstellen"] },
+  ssOrt: { l: "Neuer Standort Steuerschrank", ph: "Ort im Maschinenraum" },
+  mrBel: { l: "MR-Beleuchtung", t: "select", o: ["genügt", "wird ersetzt"] },
+  schBel: { l: "Schachtbeleuchtung", t: "select", o: ["genügt", "wird durch Elektriker ersetzt"] },
+  notab: { l: "Notabsenkung/USV", t: "select", o: ["kein bauseitiger Anschluss nötig", "separater Stromkreis durch Elektriker"] },
+  telBis: { l: "Telefonleitung bis", t: "date" },
+
+  grube: { l: "Schachtgrube", t: "select", o: ["ist trocken", "Abdichtung durch Baumeister nötig", "Grubenboden ausgleichen"] },
+  grubeBis: { l: "Fertig bis", t: "date" },
+  masse: { l: "Anpassung", ph: "Schachtgrube vertiefen auf x mm / Schachtkopf" },
+  masseBis: { l: "Fertig bis", t: "date" },
+  lichtB: { l: "Lichtmass Breite (mm)", t: "number", ph: "____" },
+  lichtH: { l: "Lichtmass Höhe (mm)", t: "number", ph: "____" },
+  ausbruchBis: { l: "Ausbrüche fertig bis", t: "date" },
+  tuerAb: { l: "Nach Türmontage ab", t: "date" },
+  staubWer: { l: "Erstellt durch", t: "select", o: ["Baumeister", "Demonteur"] },
+  maurerBis: { l: "Maurerarbeiten fertig bis", t: "date" },
+  fundament: { l: "Maschinenfundament", t: "select", o: ["bestehender Sockel bleibt", "Sockel anpassen gemäss Plan AS"] },
+  fundBis: { l: "Fertig bis", t: "date" },
+  oelwanne: { l: "Ölwanne/Auffangrand", t: "select", o: ["vorhanden", "erstellen"] },
+  oelwBis: { l: "Fertig bis", t: "date" },
+  lueft: { l: "Belüftung MR", t: "select", o: ["vorhanden", "erstellen durch Baumeister", "erstellen durch Lüftungsfirma"] },
+  lueftBis: { l: "Fertig bis", t: "date" },
+  zylBis: { l: "Fertig bis", t: "date" },
+
+  lastKg: { l: "Tragkraft min. (kg)", t: "number", ph: "x" },
+  lastDatum: { l: "Bereit am", t: "date" },
+  aufmassDatum: { l: "Aufmass am", t: "date" },
+  blendMat: { l: "Material Blenden", t: "select", o: ["Chromstahl", "Stahl RAL"] },
+  ralFarbe: { l: "RAL-Farbe (bei Stahl)", opt: true, pre: " ", ph: "z. B. 9010" },
+  guWer: { l: "Bauseitige Leistungen", t: "select", o: ["durch Bauherr (nicht im AS-Angebot)", "AS ist Generalunternehmer (im AS-Angebot)"] },
+  blendAb: { l: "Montage ab", t: "date" },
+  leiterWer: { l: "Grubenleiter", t: "select", o: ["wird durch AS geliefert", "durch Schlosser erstellt"] },
+  trennBis: { l: "Fertig bis", t: "date" },
+  stahlWas: { l: "Was", ph: "Schachtkopfträger/Unterzug/Konsolen" },
+  stahlBis: { l: "Fertig bis", t: "date" },
+  rahmenBis: { l: "Fertig bis", t: "date" },
+  schlossBis: { l: "Fertig bis", t: "date" },
+  zugangArt: { l: "Massnahme", t: "select", o: ["Steigleiter fix montieren", "Absturzsicherung beim Ausstieg erstellen", "Steigleiter fix montieren und Absturzsicherung erstellen"] },
+  zugangBis: { l: "Fertig bis", t: "date" },
+  kopfBis: { l: "Fertig bis", t: "date" },
+
+  oelMrBis: { l: "Fertig bis", t: "date" },
+  grubeH: { l: "Höhe Wände (cm)", t: "number", d: "50" },
+  oelGrBis: { l: "Fertig bis", t: "date" },
+  swArt: { l: "Schachtwände", t: "select", o: ["staubbindend behandeln", "weiss streichen"] },
+  swBis: { l: "Fertig bis", t: "date" },
+  vpFarbe: { l: "Farbe", ph: "____" },
+  vpAb: { l: "Ab", t: "date" },
+  zargen: { l: "Türzargen", t: "select", o: ["ab Werk lackiert, keine Malerarbeiten", "vor Ort streichen RAL ____"] },
+  mrWBis: { l: "Fertig bis", t: "date" },
+};
+
+// Items: id, s (Sektion), v (Varianten), l (Kurzlabel Checkliste), tpl (Text), f (Felder), def ("in"|"out"), star, opts (Auswahl)
+const ITEMS = [
+  // ---------------- Organisation
+  { id: "park", s: "org", v: [1,2,3], l: "Parkplätze Handwerker", tpl: "Handwerkerparkplatz: {parkAnz} Parkplätze für Montagefahrzeuge bei {parkOrt} während der gesamten Bauzeit. Parkbewilligung/Parkkarte durch {parkWer}.", f: ["parkAnz","parkOrt","parkWer"] },
+  { id: "depot", s: "org", v: [1,2,3], l: "Materialdepot", hint: "Foto machen", tpl: "Materialdepot: {depotOrt}{depotZus}.", f: ["depotOrt","depotZus"] },
+  { id: "wc", s: "org", v: [1,2,3], l: "WC", opts: [
+    { id: "toi", l: "Toi-Toi durch AS", tpl: "Toi-Toi: Wird durch AS bestellt, Standort {toiOrt}.", f: ["toiOrt"] },
+    { id: "toik", l: "Toi-Toi durch Kunde", tpl: "Toi-Toi: Wird durch den Kunden bestellt, Standort {toiOrt}.", f: ["toiOrt"] },
+    { id: "haus", l: "WC im Gebäude", tpl: "Toilette: WC im Gebäude ({wcOrt}) darf durch die Monteure benutzt werden.", f: ["wcOrt"] },
+  ]},
+  { id: "zugang", s: "org", v: [1,2,3], l: "Zugang / Schlüsseltresor", opts: [
+    { id: "as", l: "AS-Tresor wird deponiert", d: "Fixer Code, weil du ihn deponierst", tpl: "Zugang Gebäude: Schlüsseltresor AS wird durch AS deponiert, {tresorOrt}. Code {tresorCode}.", f: ["tresorOrt","tresorCode"] },
+    { id: "kunde", l: "Kundentresor", d: "Tresor des Kunden, deponiert oder bereits vor Ort", tpl: "Zugang Gebäude: Schlüsseltresor des Kunden {tresorOrt}. Code {tresorCodeK}.", f: ["tresorOrt","tresorCodeK"] },
+  ]},
+  { id: "az", s: "org", v: [1,2,3], l: "Arbeitszeiten", tpl: "Arbeitszeiten: Montag bis Freitag {azVon}–{azBis} Uhr. Lärmintensive Arbeiten (Spitzen, Bohren) {laermZeiten}. Samstagsarbeit nur nach Absprache mit der Verwaltung.", f: ["azVon","azBis","laermZeiten"] },
+  { id: "aushang", s: "org", v: [1,2,3], l: "Bewohnerinfo / Aushang", tpl: "Bewohnerinformation: Aushang im Treppenhaus durch {aushangWer} bis {aushangBis}. Verwaltung informiert die Bewohner über Bauzeit und Lärm.", f: ["aushangWer","aushangBis"] },
+  { id: "reinig", s: "org", v: [1,2,3], l: "Reinigung", tpl: "Reinigung: Baustelle wird täglich besenrein verlassen. Endreinigung Treppenhaus/Vorplätze nach Abschluss durch {endrWer}.", f: ["endrWer"] },
+  { id: "hw", s: "org", v: [1,2,3], l: "Hauswart", tpl: "Kontakt vor Ort: Hauswart {hwName}, {hwTel}, erreichbar {hwZeit}.", f: ["hwName","hwTel","hwZeit"] },
+  { id: "bes", s: "org", v: [1,2,3], l: "Besonderes", def: "out", tpl: "Besonderes: {besonderes}", f: ["besonderes"] },
+  { id: "mrtuer", s: "org", v: [2,3], l: "MR-Türe: Schloss normkonform?", tpl: "Maschinenraumtüre: Türe muss abschliessbar sein und von innen ohne Schlüssel zu öffnen (normkonform). Schloss {mrSchloss}.", f: ["mrSchloss"] },
+  { id: "mrzug", s: "org", v: [2,3], l: "Zugang MR / Fremdinstallationen", tpl: "Zugang Maschinenraum: Über {mrZugang}. Zugang jederzeit frei und beleuchtet. Fremdinstallationen (Lager, Antennen, Leitungen Dritter) sind vor Montagebeginn zu entfernen.", f: ["mrZugang"] },
+  { id: "mrschl", s: "org", v: [2,3], l: "MR-Schlüssel", tpl: "Maschinenraumschlüssel: {mrSchlAnz} Stk. werden am {mrSchlDatum} an AS übergeben.", f: ["mrSchlAnz","mrSchlDatum"] },
+  { id: "oelanl", s: "org", v: [3], l: "Öl-Anlieferung", tpl: "Öl-Anlieferung: Zufahrt für Öllieferung bis {oelZufahrt}. Öl wird durch AS geliefert ({oelLiter} Liter).", f: ["oelZufahrt","oelLiter"] },
+
+  // ---------------- Demonteur
+  { id: "demT", s: "dem", v: [1], l: "Demontagetermin, Dauer, Ansprechperson", tpl: "Demontage Altanlage ab {demDatum}, Dauer ca. {demDauer} Arbeitstage.", f: ["demDatum","demDauer"] },
+  { id: "demT2", s: "dem", v: [2], l: "Demontagetermin, Umfang", tpl: "Demontage ab {demDatum}, Dauer ca. {demDauer} Arbeitstage: Antrieb, Steuerung, Begrenzer, Seile, Tableaus und Drücker.", f: ["demDatum","demDauer"], hint: "Weglassen, falls AS-Monteure selber demontieren" },
+  { id: "demT3", s: "dem", v: [3], l: "Demontagetermin, Umfang", tpl: "Demontage ab {demDatum}, Dauer ca. {demDauer} Arbeitstage: Aggregat, Steuerung, Ventilblock, Tableaus und Drücker.", f: ["demDatum","demDauer"], hint: "Weglassen, falls AS-Monteure selber demontieren" },
+  { id: "getr", s: "dem", v: [2], l: "Getriebeöl entsorgen", tpl: "Getriebeöl: Öl der alten Antriebsmaschine absaugen und fachgerecht entsorgen (Entsorgungsnachweis)." },
+  { id: "altoel", s: "dem", v: [3], l: "Altöl absaugen, Liter", tpl: "Altöl: Hydrauliköl (ca. {hydLiter} Liter) absaugen und fachgerecht entsorgen inkl. Entsorgungsnachweis. Ölwanne/Auffangwanne reinigen.", f: ["hydLiter"] },
+  { id: "hydl", s: "dem", v: [3], l: "Hydraulikleitung bleibt / neu", tpl: "Hydraulikleitung: Bestehende Leitung Aggregat–Zylinder {hydLeitung}. Bei Ersatz alte Leitung demontieren.", f: ["hydLeitung"] },
+  { id: "mulde", s: "dem", v: [1,2,3], l: "Muldenstellplatz", hint: "Foto machen", tpl: "Muldenstellplatz: Stellplatz gemäss Foto." },
+  { id: "abd", s: "dem", v: [1,2,3], l: "Abdecken – womit", tpl: "Abdecken: Bodenbeläge im Transportweg (Hauseingang, Treppe und Vorplätze auf allen Stockwerken) werden mit {abdMat} abgedeckt.", f: ["abdMat"] },
+  { id: "abdoel", s: "dem", v: [3], l: "Ölfeste Abdeckung Aggregat", tpl: "Ölfeste Abdeckung im Bereich Aggregat und Transportweg Maschinenraum." },
+  { id: "absp", s: "dem", v: [1], l: "Absperrung Schacht", tpl: "Absperrung Schacht: Schachtöffnungen werden während der Demontage durch {absperr} gesichert.", f: ["absperr"] },
+  { id: "asb", s: "dem", v: [1], l: "Schadstoffe (Asbest)", def: "out", tpl: "Schadstoffe: Abklärung Asbest/PCB (Bremsbeläge, Kabel, Dichtungen) durch Bauherrn: Bericht {asbest}. Ohne Bericht keine Demontage.", f: ["asbest"] },
+  { id: "sockel", s: "dem", v: [1], l: "Sockel Schachtgrube spitzen", tpl: "Sockel Schachtgrube: Puffersockel und Fundamente in der Schachtgrube spitzen und bündig abstemmen, so dass keine Stolpergefahr mehr vorhanden ist." },
+  { id: "lochmr", s: "dem", v: [1], l: "Loch zum Maschinenraum zumauern", tpl: "Loch zum Maschinenraum: Seildurchführungen und Öffnungen zwischen Maschinenraum und Schacht nach Demontage zumauern (brandschutzkonform).", hint: "Weglassen bei Anlage ohne MR" },
+  { id: "kern", s: "dem", v: [1,2,3], l: "Kernlochbohrung LDU", tpl: "Kernlochbohrung: {kernAnz} Stk. Kernlochbohrung Ø {kernD} cm für {kernZweck}, {kernStock}, bei {kernOrt}.", f: ["kernAnz","kernD","kernZweck","kernStock","kernOrt"] },
+  { id: "kabel", s: "dem", v: [2,3], l: "Alte Kabel / Kabelkanäle", tpl: "Alte Kabel und Kabelkanäle im Maschinenraum und Schacht demontieren und entsorgen." },
+  { id: "tabl", s: "dem", v: [2,3], l: "Alte Tableaus / Drücker", tpl: "Alte Tableaus/Drücker demontieren; Öffnungen in den Vorplatzwänden werden durch Gipser geschlossen." },
+  { id: "zyl", s: "dem", v: [3], l: "Zylinderersatz", def: "out", tpl: "Zylinderersatz: Alten Zylinder ausbauen und entsorgen. Bohrloch reinigen, Dichtheit/Schutzrohr prüfen, Grubenboden für neuen Zylinder vorbereiten.", hint: "Nur bei Zylinderersatz" },
+  { id: "ents2", s: "dem", v: [2], l: "Entsorgung", tpl: "Entsorgung: Antrieb, Steuerung, Seile, Tableaus und Kabel durch Demonteur inkl. Entsorgungsnachweis." },
+  { id: "ents3", s: "dem", v: [3], l: "Entsorgung", tpl: "Entsorgung: Aggregat, Steuerung, Ventil, Öl, Tableaus und Kabel durch Demonteur inkl. Entsorgungsnachweis." },
+
+  // ---------------- Elektriker
+  { id: "prov", s: "ele", v: [1,2,3], l: "Bauprovisorium 16 A CEE", tpl: "Bauprovisorium mit 1x 16 A CEE-Stecker bei {provOrt} bereitstellen, vor Demontage am {provDatum} 07:00 Uhr.", f: ["provOrt","provDatum"] },
+  { id: "frei", s: "ele", v: [1,2,3], l: "Strom trennen – Datum, Uhrzeit", tpl: "Aufzug freischalten inkl. Schachtbeleuchtung nach Rücksprache mit dem {_demPartner}, bei Demontage am {freiDatum} um ca. {freiZeit} Uhr.", f: ["freiDatum","freiZeit"] },
+  { id: "altzul", s: "ele", v: [1], l: "Alte Zuleitung demontieren", tpl: "Alte Zuleitung, Steuerleitungen und Schachtbeleuchtung im Maschinenraum/Schacht demontieren und entsorgen." },
+  { id: "fuenf", s: "ele", v: [1,2,3], l: "Kontrolle: 5-Leiter mit Neutralleiter?", tpl: "Kontrolle Zuleitung: 5-Leiter-Zuleitung mit Neutralleiter {fuenfLeiter}.", f: ["fuenfLeiter"] },
+  { id: "zul1", s: "ele", v: [1], l: "Zuleitung / Sicherungen Kraft + Licht", tpl: "Zuleitung und Absicherung für die neue Anlage prüfen/vorbereiten: Kraft Lift {absichKraft}, Licht Lift {absichLicht}, je separater Stromkreis. Fertig bis {eleBis}.", f: ["absichKraft","absichLicht","eleBis"] },
+  { id: "zul2", s: "ele", v: [2], l: "Zuleitung / Sicherungen prüfen", tpl: "Bestehende Zuleitung und Absicherung prüfen: {absich} nötig, separater Stromkreis. Zuleitung {zulStatus} bis {eleBis}.", f: ["absich","zulStatus","eleBis"] },
+  { id: "zul3", s: "ele", v: [3], l: "Zuleitung / Anlaufstrom Hydraulik", tpl: "Zuleitung und Absicherung prüfen: Anlaufstrom Hydraulikmotor {anlaufA} A, Absicherung {absichHyd}, Zuleitung min. {zulMm2} mm². Zuleitung {zulStatus} bis {eleBis}.", f: ["anlaufA","absichHyd","zulMm2","zulStatus","eleBis"] },
+  { id: "hs", s: "ele", v: [2,3], l: "Hauptschalter abschliessbar", tpl: "Abschliessbarer Hauptschalter im Maschinenraum neben der Türe (falls nicht vorhanden) erstellen." },
+  { id: "ss", s: "ele", v: [2,3], l: "Standort Steuerschrank", tpl: "Neuer Standort Steuerschrank: {ssOrt}. Zuleitung bis dorthin verlängern.", f: ["ssOrt"] },
+  { id: "anschl", s: "ele", v: [1,2], l: "Lift anhängen, Erdung 4 Schienen", tpl: "Aufzug nach Rücksprache mit dem Monteur an Strom anschliessen und erstellen des Potentialausgleichs an den 4 Schienen. Termin ca. {anschlDatum}.", f: ["anschlDatum"] },
+  { id: "anschl3", s: "ele", v: [3], l: "Lift anhängen, Erdung Schienen + Aggregat", tpl: "Aufzug nach Rücksprache mit dem Monteur an Strom anschliessen und erstellen des Potentialausgleichs an den Schienen und am Aggregat. Termin ca. {anschlDatum}.", f: ["anschlDatum"] },
+  { id: "notab", s: "ele", v: [3], l: "Notabsenkung / USV", tpl: "Notabsenkung/Notstrom: Batterie/USV für Notabsenkung und Notlicht wird durch AS geliefert; {notab}.", f: ["notab"] },
+  { id: "bel1", s: "ele", v: [1], l: "Beleuchtung 200 / 50 Lux", tpl: "Beleuchtung erstellen: Vor Steuerschrank min. 200 Lux und vor Schachttür min. 50 Lux." },
+  { id: "schbel1", s: "ele", v: [1], l: "Schachtbeleuchtung", tpl: "Schachtbeleuchtung: {schBelWer}. Separater Stromkreis mit Schalter.", f: ["schBelWer"] },
+  { id: "belmr", s: "ele", v: [2,3], l: "Beleuchtung MR 200 Lux", tpl: "Beleuchtung Maschinenraum: Vor Steuerschrank min. 200 Lux, Lichtschalter beim Eingang. Beleuchtung {mrBel}.", f: ["mrBel"] },
+  { id: "schbel2", s: "ele", v: [2,3], l: "Schachtbeleuchtung 50 Lux", tpl: "Schachtbeleuchtung prüfen: min. 50 Lux, Schalter im Maschinenraum und in der Grube. Beleuchtung {schBel}.", f: ["schBel"] },
+  { id: "bm", s: "ele", v: [1,2,3], l: "Brandfall-Kabel / BM-Kontakt", tpl: "Vorbereitung Gebäudebrandfall-Kabel (falls vorh.) und 2-adriges Kabel (potenzialfrei) für BM-Kontakt bis zum Steuerschrank." },
+  { id: "notruf", s: "ele", v: [1,2,3], l: "Notruf – GSM oder Telefon", opts: [
+    { id: "gsm", l: "GSM-Modul AS", tpl: "Notruf: Notrufsystem AS über GSM-Modul, keine Telefonleitung nötig." },
+    { id: "eth", l: "Ethernet durch Kunde", tpl: "Notruf: Notrufsystem AS über Ethernet. Netzwerkanschluss (LAN, RJ45) beim Steuerschrank durch den Kunden bereitstellen bis {lanBis}.", f: ["lanBis"] },
+  ]},
+
+  // ---------------- Baumeister
+  { id: "bloch", s: "bau", v: [1], l: "Löcher MR / Schacht ausmauern", tpl: "Löcher Maschinenraum/Schacht nach Rückbau ausmauern (Öffnung für Kabeldurchführung freilassen), brandschutzkonform.", hint: "Weglassen bei Anlage ohne MR" },
+  { id: "beton", s: "bau", v: [1], l: "Betonüberstände abstemmen", tpl: "Betonüberstände im Schacht bündig abstemmen." },
+  { id: "bkern", s: "bau", v: [1], l: "Kernbohrungen", tpl: "Erstellung {kernAnz} Stk. Kernbohrungen Ø {kernD} cm für {kernZweck}, {kernStock}, bei {kernOrt}.", f: ["kernAnz","kernD","kernZweck","kernStock","kernOrt"], hint: "Gleiche Felder wie beim Demonteur – nur einen von beiden aufnehmen" },
+  { id: "bkern2", s: "bau", v: [2], l: "Kernbohrungen MR-Boden", tpl: "Erstellung {kernAnz} Stk. Kernbohrungen Ø {kernD} cm im Maschinenraumboden für {kernZweck}, {kernStock}, bei {kernOrt}.", f: ["kernAnz","kernD","kernZweck","kernStock","kernOrt"] },
+  { id: "bkern3", s: "bau", v: [3], l: "Kernbohrungen MR / Schachtwand", tpl: "Erstellung {kernAnz} Stk. Kernbohrungen Ø {kernD} cm im Maschinenraumboden/Schachtwand für {kernZweck}, {kernStock}, bei {kernOrt}.", f: ["kernAnz","kernD","kernZweck","kernStock","kernOrt"] },
+  { id: "boeff", s: "bau", v: [2,3], l: "Alte Öffnungen schliessen", tpl: "Alte, nicht mehr benötigte Öffnungen im Maschinenraumboden brandschutzkonform schliessen." },
+  { id: "bsockel", s: "bau", v: [1], l: "Sockel Schachtgrube", def: "out", tpl: "Sockel Schachtgrube spitzen und bündig abstemmen, so dass keine Stolpergefahr mehr vorhanden ist.", hint: "Nur falls nicht Demonteur" },
+  { id: "bboden", s: "bau", v: [1], l: "Bodenanschluss Schachttüren auffüllen", tpl: "Nach Türmontage ab ca. {tuerAb}: Bodenanschluss bei den Schachttüren auf Vorplatzniveau mit Mörtel auffüllen.", f: ["tuerAb"], hint: "Baumeister oder Gipser – einen von beiden aufnehmen" },
+  { id: "staub", s: "bau", v: [1,2,3], l: "STAUBSCHLEUSE bei Attikawohnung", star: true, tpl: "Staubschleuse: Bei Attikawohnung (Schachttüre direkt in die Wohnung) Staubschutzwand/Staubschleuse vor der Schachttüre erstellen durch {staubWer} vor Beginn.", f: ["staubWer"] },
+  { id: "bfund", s: "bau", v: [2], l: "Maschinenfundament", def: "out", tpl: "Maschinenfundament: {fundament} bis {fundBis}.", f: ["fundament","fundBis"] },
+  { id: "boelw", s: "bau", v: [3], l: "Ölwanne / Auffangrand", tpl: "Ölwanne: Maschinenraumboden im Bereich Aggregat ölfest und mit Auffangrand/Schwelle bei der Türe: {oelwanne} bis {oelwBis}.", f: ["oelwanne","oelwBis"] },
+  { id: "blueft", s: "bau", v: [3], l: "Belüftung MR", def: "out", tpl: "Belüftung Maschinenraum: Lüftungsöffnung/Ventilator wegen Öltemperatur {lueft} bis {lueftBis}.", f: ["lueft","lueftBis"] },
+  { id: "bzyl", s: "bau", v: [3], l: "Zylinderersatz – Bohrloch", def: "out", tpl: "Zylinderersatz: Bohrloch/Zylinderschacht in der Grube anpassen, Schutzrohr setzen, Grubenboden abdichten gemäss Plan AS bis {zylBis}.", f: ["zylBis"], hint: "Nur bei Zylinderersatz" },
+  { id: "babd", s: "bau", v: [1,2,3], l: "Abdecken (falls Baumeister)", def: "out", tpl: "Abdecken: Bodenbeläge im Transportweg (Hauseingang, Treppe und Vorplätze auf allen Stockwerken) mit {abdMat} abdecken.", f: ["abdMat"], hint: "Nur falls nicht Demonteur" },
+  { id: "bmulde", s: "bau", v: [1,2,3], l: "Mulde (falls Baumeister)", def: "out", tpl: "Muldenstellplatz: Stellplatz gemäss Foto, Mulde durch Baumeister.", hint: "Nur falls nicht Demonteur" },
+  { id: "btuer", s: "bau", v: [1], l: "Türöffnungen – Lichtmass, Ausbruch", tpl: "Schachttüröffnungen: Leibungen und Sturz an neue Türmasse anpassen (Lichtmass B x H {lichtB} x {lichtH} mm gemäss Plan AS). Ausbrüche vor Türmontage fertig bis {ausbruchBis}.", f: ["lichtB","lichtH","ausbruchBis"] },
+
+  // ---------------- Schlosser
+  { id: "last1", s: "sch", v: [1], l: "Lastträger vor Demontage", tpl: "Lastträger: Lastträger/Anschlagpunkt im Schachtkopf (Tragkraft min. {lastKg} kg) vor Beginn der Demontage am {lastDatum} bereitstellen und montieren.", f: ["lastKg","lastDatum"] },
+  { id: "last2", s: "sch", v: [2], l: "Lastträger MR über Antrieb", tpl: "Lastträger: Hebeöse/Lastträger im Maschinenraum über der Antriebsmaschine (Tragkraft min. {lastKg} kg) vor Beginn der Demontage am {lastDatum} bereitstellen.", f: ["lastKg","lastDatum"] },
+  { id: "last3", s: "sch", v: [3], l: "Lastträger MR über Aggregat", tpl: "Lastträger: Hebeöse/Lastträger im Maschinenraum über dem Aggregat (Tragkraft min. {lastKg} kg) vor Beginn der Demontage am {lastDatum} bereitstellen.", f: ["lastKg","lastDatum"], hint: "Weglassen, falls Aggregat mit Hubwagen versetzbar" },
+  { id: "aufm", s: "sch", v: [1,2,3], l: "Schachttüren ausmessen", def: "out", tpl: "Schachttüren ausmessen: Aufmass der Schachttüröffnungen und Blenden durch Schlosser am ca. {aufmassDatum}.", f: ["aufmassDatum"] },
+  { id: "blend", s: "sch", v: [1], l: "Türblenden / Abschlussbleche", tpl: "Türblenden/Abschlussbleche: Verkleidung über und seitlich der Schachttüren ({blendMat}{ralFarbe}) liefern und montieren nach Türmontage ab ca. {blendAb}.", f: ["blendMat","ralFarbe","blendAb"] },
+  { id: "trenn", s: "sch", v: [1], l: "Trennwand / Schutzgitter (Gruppe)", def: "out", tpl: "Trennwand/Schutzgitter im Schacht (Gruppenanlage) erstellen bis {trennBis}.", f: ["trennBis"] },
+  { id: "rahmen", s: "sch", v: [2], l: "Maschinenrahmen / Unterbau", def: "out", tpl: "Maschinenrahmen/Unterbau für neuen Antrieb gemäss Plan AS liefern und montieren bis {rahmenBis}.", f: ["rahmenBis"] },
+  { id: "schloss", s: "sch", v: [2,3], l: "MR-Türe Schloss ersetzen", def: "out", tpl: "Maschinenraumtüre: Schloss normkonform ersetzen (abschliessbar, von innen ohne Schlüssel zu öffnen) bis {schlossBis}.", f: ["schlossBis"] },
+  { id: "zugmr", s: "sch", v: [2,3], l: "Leiter / Absturzsicherung MR", def: "out", tpl: "Zugang Maschinenraum: {zugangArt} bis {zugangBis}.", f: ["zugangArt","zugangBis"] },
+  { id: "kopf", s: "sch", v: [3], l: "Zylinder Kopfführung", def: "out", tpl: "Zylinderersatz: Kopfführung/Zylinderhalterung gemäss Plan AS liefern und montieren bis {kopfBis}.", f: ["kopfBis"], hint: "Nur bei Zylinderersatz" },
+
+  // ---------------- Maler
+  { id: "oelmr", s: "mal", v: [1,2,3], l: "Ölanstrich MR", tpl: "Ölanstrich Maschinenraum: Boden Maschinenraum mit ölfestem, staubbindendem Anstrich versehen bis {oelMrBis}.", f: ["oelMrBis"], hint: "Bei V1 weglassen, falls kein MR mehr" },
+  { id: "oelgr", s: "mal", v: [1,2,3], l: "Ölanstrich Schachtgrube", tpl: "Ölanstrich Schachtgrube: Boden und Wände der Schachtgrube bis Höhe {grubeH} cm mit Ölanstrich versehen, nach Baumeisterarbeiten und vor Montagebeginn bis {oelGrBis}.", f: ["grubeH","oelGrBis"] },
+  { id: "mrw", s: "mal", v: [2,3], l: "MR-Wände streichen", def: "out", tpl: "Maschinenraum: Wände und Decke streichen bis {mrWBis}.", f: ["mrWBis"] },
+  { id: "vp1", s: "mal", v: [1], l: "Vorplätze streichen", tpl: "Vorplätze: Wände um die neuen Schachttüren nach Gipserarbeiten streichen, Farbe {vpFarbe}, ab {vpAb}.", f: ["vpFarbe","vpAb"] },
+  { id: "vp2", s: "mal", v: [2,3], l: "Vorplätze bei Tableaus", tpl: "Vorplätze: Wände im Bereich der neuen Tableaus/Drücker nach Gipserarbeiten ausbessern/streichen, Farbe {vpFarbe}.", f: ["vpFarbe"] },
+
+  // ---------------- Gipser
+  { id: "gz", s: "gip", v: [1], l: "Zargen einputzen", tpl: "Neue Schachttürzargen einputzen/verputzen (Anschluss Zarge–Wand) nach Türmontage ab ca. {tuerAb}.", f: ["tuerAb"] },
+  { id: "gboden", s: "gip", v: [1], l: "Bodenanschluss Schachttüren auffüllen", tpl: "Nach Türmontage ab ca. {tuerAb}: Bodenanschluss bei den Schachttüren auf Vorplatzniveau mit Mörtel auffüllen.", f: ["tuerAb"], hint: "Baumeister oder Gipser – einen von beiden aufnehmen" },
+  { id: "gvp", s: "gip", v: [1], l: "Ausbrüche Vorplatz verputzen", tpl: "Ausbrüche und Dübellöcher im Vorplatzbereich verputzen." },
+  { id: "gtab", s: "gip", v: [2,3], l: "Alte Tableau-Löcher verputzen", tpl: "Öffnungen der alten Tableaus/Drücker in den Vorplatzwänden verputzen; Ausschnitte für neue Tableaus gemäss Vorgabe AS erstellen." },
+  { id: "gmr", s: "gip", v: [2,3], l: "MR ausbessern", tpl: "Maschinenraum: Wände und Decke nach Rückbau ausbessern.", hint: "Bei V1 weglassen, falls kein MR mehr" },
+  { id: "gbs", s: "gip", v: [2,3], l: "Brandschutz Durchführungen", tpl: "Kabel- und Leitungsdurchführungen brandschutzkonform abschotten (falls durch Gipser)." },
+
+  // ---------------- Hinweise
+  { id: "h1", s: "hin", v: [1,2,3], l: "Bauseitige Leistungen – Bauherr oder AS als GU", opts: [
+    { id: "bh", l: "Durch Bauherr", d: "Nicht im AS-Angebot enthalten", tpl: "Bauseitige Leistungen (Baumeister, Elektriker, Schlosser, Maler, Gipser) sind nicht im Angebot von AS Aufzüge AG enthalten und werden durch den Bauherrn direkt beauftragt und bezahlt." },
+    { id: "gu", l: "AS ist Generalunternehmer", d: "Kosten im AS-Angebot inbegriffen", tpl: "AS Aufzüge AG ist Generalunternehmer: Die bauseitigen Leistungen (Baumeister, Elektriker, Schlosser, Maler, Gipser) sind im Angebot von AS Aufzüge AG enthalten und werden durch AS koordiniert und beauftragt." },
+  ]},
+  { id: "h2", s: "hin", v: [1,2,3], l: "Termine gemäss Bauprogramm", tpl: "Termine gemäss separatem Bauprogramm/Dispoplan. Bauseitige Vorarbeiten müssen bis zum jeweils genannten Datum abgeschlossen sein, sonst verschiebt sich der Montagebeginn." },
+  { id: "h3", s: "hin", v: [1,2,3], l: "Zusatzleistungen nur schriftlich", tpl: "Zusatzleistungen von AS Aufzüge AG werden nur nach schriftlicher Bestätigung ausgeführt und separat verrechnet." },
+];
+
+// ============================================================ Zustand
+const KEY = "bausitzung-baukasten-v1";
+const KEEP_KEY = "bausitzung-baukasten-keep";
+let KEEP = {}; try { KEEP = JSON.parse(localStorage.getItem(KEEP_KEY) || "{}"); } catch (e) {}
+const blank = () => ({ variant: null, choose: true, komNr: "", projekt: "", step: 0, items: {}, fields: Object.assign({}, KEEP), custom: {} });
+let S = blank();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); Object.keys(F).filter(k => F[k].keep).forEach(k => { if (S.fields[k]) KEEP[k] = S.fields[k]; }); localStorage.setItem(KEEP_KEY, JSON.stringify(KEEP)); } catch (e) {} }
+
+const itemsFor = (v, sec) => ITEMS.filter(i => i.v.includes(v) && (!sec || i.s === sec));
+const secsFor = (v) => SECTIONS.filter(s => itemsFor(v, s.id).length);
+const st = (id) => S.items[id] || (S.items[id] = { mode: null, opt: null });
+
+function fmtDate(v) { if (!v) return ""; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); return m ? `${m[3]}.${m[2]}.${m[1]}` : v; }
+function fieldVal(k) {
+  const f = F[k]; let v = S.fields[k];
+  if (v === undefined || v === "") v = f.d !== undefined ? f.d : (f.t === "select" ? f.o[0] : "");
+  if (f.t === "date") v = fmtDate(v);
+  return v;
+}
+const esc = (s) => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Text rendern; html=true markiert leere Platzhalter
+function render(tpl, fields, html) {
+  return tpl.replace(/\{(_?\w+)\}/g, (m, k) => {
+    if (k === "_demPartner") return S.variant === 1 ? "Demonteur" : "Monteur";
+    const f = F[k]; if (!f) return m;
+    const v = fieldVal(k);
+    if (f.opt) { const pre = f.pre ?? ", "; return v ? (html ? esc(pre + v) : pre + v) : ""; }
+    if (v) return html ? esc(v) : v;
+    const ph = "[" + (f.ph || (f.t === "date" ? "Datum" : f.t === "time" ? "Uhrzeit" : f.l)) + "]";
+    return html ? `<span class="ph">${esc(ph)}</span>` : ph;
+  });
+}
+function itemText(it, html) {
+  const s = st(it.id);
+  if (it.opts) { const o = it.opts.find(o => o.id === s.opt); return o ? render(o.tpl, o.f, html) : ""; }
+  return render(it.tpl, it.f, html);
+}
+function itemState(it) { const s = st(it.id); if (s.mode === "out") return "out"; if (s.mode === "in" && (!it.opts || s.opt)) return "in"; return "open"; }
+function applyDefaults(v) {
+  itemsFor(v).forEach(it => { const s = st(it.id); if (it.opts && s.opt && !it.opts.find(o => o.id === s.opt)) { s.opt = null; if (s.mode === "in") s.mode = null; } if (s.mode === null && it.def === "out") s.mode = "out"; if (s.mode === null && !it.opts && !it.def) s.mode = "in"; });
+}
+
+// ============================================================ UI
+const $ = (sel) => document.querySelector(sel);
+const view = $("#view"), stepsEl = $("#steps"), metaEl = $("#meta"), bar = $("#bar");
+
+function draw() {
+  const v = S.variant;
+  const secs = v ? secsFor(v) : [];
+  const total = secs.length + 1; // + Ausgabe
+  // Kopf
+  metaEl.innerHTML = v ? `<span class="chip">${VARIANTS[v].k} ${esc(VARIANTS[v].name)}</span>${S.komNr ? `<span>Kom ${esc(S.komNr)}</span>` : ""}` : "";
+  stepsEl.innerHTML = "";
+  if (v) {
+    secs.forEach((sec, i) => {
+      const its = itemsFor(v, sec.id); const open = its.filter(it => itemState(it) === "open").length;
+      const b = document.createElement("button"); b.className = "step"; b.type = "button";
+      if (S.step === i) b.setAttribute("aria-current", "step");
+      b.innerHTML = `${esc(sec.name)} <span class="n ${open ? "open" : "done"}">${open ? open + " offen" : "✓"}</span>`;
+      b.onclick = () => go(i); stepsEl.appendChild(b);
+    });
+    const b = document.createElement("button"); b.className = "step"; b.type = "button";
+    if (S.step === secs.length) b.setAttribute("aria-current", "step");
+    b.textContent = "Textbausteine"; b.onclick = () => go(secs.length); stepsEl.appendChild(b);
+  }
+  // Inhalt
+  if (!v || S.choose) { stepsEl.innerHTML = ""; drawStart(); bar.hidden = true; return; }
+  bar.hidden = false;
+  if (S.step >= secs.length) { drawOutput(secs); }
+  else drawSection(secs[S.step], S.step, secs.length);
+  $("#btnPrev").textContent = S.step === 0 ? "Variante" : "Zurück";
+  $("#btnNext").textContent = S.step >= secs.length ? "Fertig" : (S.step === secs.length - 1 ? "Textbausteine" : "Weiter");
+  $("#btnNext").hidden = S.step >= secs.length;
+  const allOpen = itemsFor(v).filter(it => itemState(it) === "open").length;
+  $("#barStatus").textContent = S.step >= secs.length ? "" : `Schritt ${S.step + 1} von ${total} · ${allOpen ? allOpen + " Punkte offen" : "alle Punkte entschieden"}`;
+}
+function go(i) { S.step = i; save(); draw(); window.scrollTo({ top: 0 }); }
+
+function drawStart() {
+  view.innerHTML = `
+    <h2>Welche Anlage?</h2>
+    <p class="lead">Wähle die Variante. Danach gehst du die Bausitzung Betreff für Betreff durch, entscheidest pro Punkt «aufnehmen» oder «weglassen» und trägst die Angaben ein. Am Schluss bekommst du die fertigen Textbausteine zum Kopieren in MoreApp.</p>
+    <div class="project">
+      <div class="field pfield"><label for="komNr">Kom Nr. (optional)</label><input id="komNr" inputmode="numeric" placeholder="z. B. 20135803" value="${esc(S.komNr)}"></div>
+      <div class="field pfield"><label for="projekt">Projekt / Adresse (optional)</label><input id="projekt" placeholder="z. B. Hochwangstrasse 5, Landquart" value="${esc(S.projekt)}"></div>
+    </div>
+    <div class="variants" id="variants"></div>
+    ${hasDraft() ? `<div class="notice warn" style="margin-top:16px">Es gibt einen angefangenen Entwurf${S.komNr ? " (Kom " + esc(S.komNr) + ")" : ""}. Die gleiche Variante wählen führt ihn weiter; <button class="btn small" id="btnReset" type="button">Neu beginnen</button> löscht alle Eingaben.</div>` : ""}
+  `;
+  $("#komNr").oninput = e => { S.komNr = e.target.value; save(); };
+  $("#projekt").oninput = e => { S.projekt = e.target.value; save(); };
+  const vs = $("#variants");
+  [1,2,3].forEach(n => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "vcard";
+    b.innerHTML = `<span class="t"><span class="k">${VARIANTS[n].k}</span>${esc(VARIANTS[n].name)}</span><span class="d">${esc(VARIANTS[n].desc)}</span>`;
+    b.onclick = () => { if (S.variant && S.variant !== n) { S.items = {}; } S.variant = n; S.choose = false; applyDefaults(n); S.step = 0; save(); draw(); window.scrollTo({ top: 0 }); };
+    vs.appendChild(b);
+  });
+  const r = $("#btnReset"); if (r) r.onclick = () => { S = blank(); save(); draw(); };
+}
+function hasDraft() { return Object.keys(S.items).length || Object.keys(S.fields).length; }
+
+function fieldHtml(k, it) {
+  const f = F[k]; const id = `f-${it.id}-${k}`; const val = S.fields[k] ?? (f.d ?? "");
+  let ctrl;
+  if (f.t === "select") ctrl = `<select id="${id}" data-k="${k}">${f.o.map(o => `<option ${o === (S.fields[k] ?? f.o[0]) ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  else if (f.t === "textarea") ctrl = `<textarea id="${id}" data-k="${k}" placeholder="${esc(f.hint || "")}">${esc(val)}</textarea>`;
+  else ctrl = `<input id="${id}" data-k="${k}" type="${f.t || "text"}" ${f.t === "number" ? 'inputmode="decimal"' : ""} placeholder="${esc(f.hint || f.ph || "")}" value="${esc(String(val))}">`;
+  return `<div class="field ${f.wide ? "wide" : ""}"><label for="${id}">${esc(f.l)}</label>${ctrl}</div>`;
+}
+
+function drawSection(sec, idx, n) {
+  const v = S.variant; const its = itemsFor(v, sec.id);
+  const intro = { org: "Was der Bauherr / die Verwaltung bereitstellt.", dem: "Rückbau, Mulde, Abdecken, Vorarbeiten im Schacht.", ele: "Steht teilweise auch im Dispoplan, geht aber gerne vergessen.", bau: "Wie Demonteur, ohne Demontage. Staubschleuse nicht vergessen.", sch: "Lastträger vor der Demontage, Aufmass, Blenden.", mal: "Ölanstrich Maschinenraum und Schachtgrube.", gip: "Zargen und alte Öffnungen.", hin: "Optional. Standardtexte, die du ans Ende des Protokolls stellen kannst." }[sec.id] || "";
+  let h = `<h2>${idx + 1}. Besprechungsnotiz – ${esc(sec.name)}</h2><p class="lead">${esc(intro)}</p><div class="items">`;
+  its.forEach(it => {
+    const s = st(it.id); const state = itemState(it);
+    h += `<div class="item ${s.mode === "out" ? "out" : ""} ${state === "open" ? "open-state" : ""} ${it.star ? "star" : ""}" data-id="${it.id}">
+      <div class="item-h"><div class="l">${esc(it.l)}${it.hint ? `<small>${esc(it.hint)}</small>` : ""}</div>
+        <div class="seg"><button type="button" class="${s.mode === "in" ? "on-in" : ""}" data-mode="in">Aufnehmen</button><button type="button" class="${s.mode === "out" ? "on-out" : ""}" data-mode="out">Weglassen</button></div></div>`;
+    if (it.opts) {
+      h += `<div class="opts">` + it.opts.map(o => `<label class="opt ${s.opt === o.id ? "sel" : ""}"><input type="radio" name="opt-${it.id}" value="${o.id}" ${s.opt === o.id ? "checked" : ""}><span><span class="ol">${esc(o.l)}</span>${o.d ? `<br><span class="od">${esc(o.d)}</span>` : ""}</span></label>`).join("") + `</div>`;
+    }
+    const fkeys = it.opts ? ((it.opts.find(o => o.id === s.opt) || {}).f || []) : (it.f || []);
+    if (fkeys.length) h += `<div class="fields">${fkeys.map(k => fieldHtml(k, it)).join("")}</div>`;
+    const txt = itemText(it, true);
+    if (txt) h += `<div class="preview">${txt}</div>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+  // Eigene Zeilen
+  const cs = S.custom[sec.id] || [];
+  h += `<div class="custom" style="margin-top:10px"><div class="eyebrow">Eigene Zeile für ${esc(sec.name)}</div>
+    ${cs.length ? `<div class="customs">${cs.map((c, i) => `<div class="cline"><span>${esc(c)}</span><button type="button" class="btn small ghost" data-del="${i}">Löschen</button></div>`).join("")}</div>` : ""}
+    <textarea id="customIn" placeholder="Kleine Ergänzung, die nur bei diesem Projekt gilt …"></textarea>
+    <div><button type="button" class="btn small" id="customAdd">Zeile hinzufügen</button></div></div>`;
+  view.innerHTML = h;
+
+  // Events
+  view.querySelectorAll(".item").forEach(card => {
+    const it = ITEMS.find(x => x.id === card.dataset.id); const s = st(it.id);
+    card.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { s.mode = b.dataset.mode; if (s.mode === "in" && it.opts && !s.opt && it.opts.length === 1) s.opt = it.opts[0].id; save(); redraw(); });
+    card.querySelectorAll(`input[type=radio]`).forEach(r => r.onchange = () => { s.opt = r.value; s.mode = "in"; save(); redraw(); });
+    card.querySelectorAll("[data-k]").forEach(inp => {
+      const upd = () => { S.fields[inp.dataset.k] = inp.value; save(); const pv = card.querySelector(".preview"); if (pv) pv.innerHTML = itemText(it, true); syncField(inp.dataset.k, inp); };
+      inp.oninput = upd; inp.onchange = upd;
+    });
+  });
+  $("#customAdd").onclick = () => { const t = $("#customIn").value.trim(); if (!t) return; (S.custom[sec.id] = S.custom[sec.id] || []).push(t); save(); redraw(); };
+  view.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.custom[sec.id].splice(+b.dataset.del, 1); save(); redraw(); });
+}
+// gleiches Feld in anderen Karten mitziehen (z. B. Kernbohrung bei Demonteur und Baumeister)
+function syncField(k, src) {
+  view.querySelectorAll(`[data-k="${k}"]`).forEach(o => { if (o !== src) { o.value = src.value; const card = o.closest(".item"); const it = ITEMS.find(x => x.id === card.dataset.id); const pv = card.querySelector(".preview"); if (pv) pv.innerHTML = itemText(it, true); } });
+}
+function redraw() { const y = window.scrollY; draw(); window.scrollTo({ top: y }); }
+
+function outputBlocks(secs) {
+  return secs.map(sec => {
+    const lines = itemsFor(S.variant, sec.id).filter(it => itemState(it) === "in").map(it => itemText(it, false)).filter(Boolean);
+    (S.custom[sec.id] || []).forEach(c => lines.push(c));
+    return { sec, lines };
+  }).filter(b => b.lines.length);
+}
+function drawOutput(secs) {
+  const blocks = outputBlocks(secs);
+  const open = itemsFor(S.variant).filter(it => itemState(it) === "open");
+  const missing = blocks.reduce((n, b) => n + b.lines.filter(l => /\[[^\]]+\]/.test(l)).length, 0);
+  let h = `<h2>Textbausteine${S.komNr ? ` · Kom ${esc(S.komNr)}` : ""}</h2>
+    <p class="lead">${VARIANTS[S.variant].k} ${esc(VARIANTS[S.variant].name)}${S.projekt ? " · " + esc(S.projekt) : ""}. Pro Betreff eine Besprechungsnotiz in MoreApp; jede Zeile ist ein Eintrag «Beschreibung Notizen».</p>`;
+  if (open.length) h += `<div class="notice warn">${open.length} Punkt${open.length > 1 ? "e" : ""} noch nicht entschieden: ${open.map(it => esc(it.l)).join(", ")}. Diese fehlen unten.</div>`;
+  if (missing) h += `<div class="notice warn">${missing} Zeile${missing > 1 ? "n" : ""} enthalten noch Platzhalter in [eckigen Klammern].</div>`;
+  if (!open.length && !missing) h += `<div class="notice good">Alle Punkte entschieden, keine offenen Platzhalter.</div>`;
+  h += `<div class="rowbtns"><button type="button" class="btn primary" id="copyAll">Alles kopieren</button><button type="button" class="btn" id="btnEdit">Zurück zum Bearbeiten</button><button type="button" class="btn ghost" id="btnNew">Neues Protokoll</button></div><div id="confirmNew"></div>`;
+  blocks.forEach((b, bi) => {
+    h += `<div class="out-sec"><div class="out-h"><div class="t">${bi + 1}. ${esc(b.sec.name)}<small>${b.lines.length} Zeile${b.lines.length > 1 ? "n" : ""}</small></div><button type="button" class="btn small" data-copysec="${b.sec.id}">Betreff kopieren</button></div><div class="lines">`;
+    b.lines.forEach((l, i) => { h += `<div class="line"><span class="n">${i + 1}</span><span class="tx">${esc(l).replace(/\[[^\]]+\]/g, m => `<span class="ph">${m}</span>`)}</span><button type="button" class="btn small ghost cp" data-copy="${bi}:${i}">Kopieren</button></div>`; });
+    h += `</div></div>`;
+  });
+  if (!blocks.length) h += `<div class="notice warn">Noch keine Zeilen aufgenommen.</div>`;
+  view.innerHTML = h;
+  const secText = (b) => b.lines.join("\n");
+  const allText = blocks.map((b, i) => `${i + 1}. ${b.sec.name}\n${secText(b)}`).join("\n\n");
+  $("#copyAll").onclick = (e) => copy(allText, e.currentTarget);
+  $("#btnEdit").onclick = () => go(0);
+  $("#btnNew").onclick = () => { $("#confirmNew").innerHTML = `<div class="notice warn confirm">Alle Eingaben löschen und neu beginnen? <button type="button" class="btn small" id="yesNew">Ja, löschen</button><button type="button" class="btn small ghost" id="noNew">Abbrechen</button></div>`; $("#yesNew").onclick = () => { S = blank(); save(); draw(); window.scrollTo({ top: 0 }); }; $("#noNew").onclick = () => $("#confirmNew").innerHTML = ""; };
+  view.querySelectorAll("[data-copysec]").forEach(b => b.onclick = (e) => copy(secText(blocks.find(x => x.sec.id === b.dataset.copysec)), e.currentTarget));
+  view.querySelectorAll("[data-copy]").forEach(b => b.onclick = (e) => { const [bi, i] = b.dataset.copy.split(":").map(Number); copy(blocks[bi].lines[i], e.currentTarget); });
+}
+function copy(text, btn) {
+  const done = () => { const old = btn.textContent; btn.textContent = "Kopiert"; btn.classList.add("copied"); setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1400); };
+  const fb = () => { const ta = $("#fallback"); ta.value = text; ta.style.left = "0"; ta.focus(); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.style.left = "-9999px"; if (ok) done(); else { btn.textContent = "Text markieren"; } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fb); else fb();
+}
+
+$("#btnPrev").onclick = () => { if (S.step === 0) { S.choose = true; save(); draw(); window.scrollTo({ top: 0 }); } else go(S.step - 1); };
+$("#btnNext").onclick = () => go(S.step + 1);
+
+// Start: Variante gewählt → weiter; sonst Startseite. Bei zurück zur Variantenwahl bleibt der Entwurf erhalten.
+if (S.variant) applyDefaults(S.variant);
+draw();
+</script>
+</body></html>
