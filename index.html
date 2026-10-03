@@ -103,6 +103,22 @@
   .cline { display: flex; gap: 8px; align-items: flex-start; font-family: var(--mono); font-size: 12.5px; background: var(--surface-2); padding: 6px 10px; border-radius: 7px; }
   .cline span { flex: 1; white-space: pre-wrap; }
 
+
+  /* Projekt, Teilnehmer, Fotos, Unterschrift */
+  .card { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 10px; margin-bottom: 10px; }
+  .teiln { display: grid; gap: 8px; margin-bottom: 10px; }
+  .trow { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; align-items: end; }
+  .trow .btn { justify-self: start; }
+  @media (max-width: 460px) { .trow { grid-template-columns: 1fr; } }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .thumb { position: relative; width: 96px; height: 72px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-2); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .x { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 11px; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 15px; line-height: 22px; cursor: pointer; padding: 0; }
+  .sig { width: 100%; max-width: 100%; aspect-ratio: 10 / 3; border: 1px dashed var(--line-strong); border-radius: 8px; background: #fff; touch-action: none; display: block; }
+  .hint { font-size: 12.5px; color: var(--muted); align-self: center; }
+  details.texts { margin-top: 18px; }
+  details.texts summary { cursor: pointer; font-weight: 600; padding: 8px 0; color: var(--muted); }
+
   /* Buttons */
   .btn { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .btn:hover { border-color: var(--ink); }
@@ -154,6 +170,7 @@
 
 <textarea class="fallback" id="fallback" aria-hidden="true" tabindex="-1"></textarea>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // ============================================================ Inhalte
 const VARIANTS = {
@@ -423,26 +440,37 @@ const ITEMS = [
 ];
 
 // ============================================================ Zustand
-const KEY = "bausitzung-baukasten-v1";
+const KEY = "bausitzung-baukasten-v2";
 const KEEP_KEY = "bausitzung-baukasten-keep";
 let KEEP = {}; try { KEEP = JSON.parse(localStorage.getItem(KEEP_KEY) || "{}"); } catch (e) {}
-const blank = () => ({ variant: null, choose: true, komNr: "", projekt: "", step: 0, items: {}, fields: Object.assign({}, KEEP), custom: {} });
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const FUNKTIONEN = ["Montagechef", "Bauleiter", "Bauherr", "Verwaltung", "Hauswart", "Architekt", "Demonteur", "Elektriker", "Baumeister", "Schlosser", "Maler", "Gipser", "Verkäufer AS", "Projektleiter AS", "Monteur", "Andere"];
+const blankProj = () => ({ name: "", komNr: "", typ: "", strasse: "", plzOrt: "", datum: today(), ort: KEEP.ort || "Chur", gs: KEEP.gs || "AS-OS", vonName: KEEP.vonName || "", vonPos: KEEP.vonPos || "Installation Supervisor", vonTel: KEEP.vonTel || "" });
+const blank = () => ({ variant: null, choose: true, step: 0, items: {}, fields: Object.assign({}, KEEP.fields || {}, KEEP.tresorCode ? { tresorCode: KEEP.tresorCode } : {}), custom: {}, photos: {}, proj: blankProj(), teiln: [], sign: KEEP.sign || "" });
 let S = blank();
-try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) {}
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); Object.keys(F).filter(k => F[k].keep).forEach(k => { if (S.fields[k]) KEEP[k] = S.fields[k]; }); localStorage.setItem(KEEP_KEY, JSON.stringify(KEEP)); } catch (e) {} }
+try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); S = Object.assign(blank(), o); S.proj = Object.assign(blankProj(), o.proj || {}); } } catch (e) {}
+let storageFull = false;
+function save() {
+  try {
+    const keepFields = {}; Object.keys(F).filter(k => F[k].keep).forEach(k => { if (S.fields[k]) keepFields[k] = S.fields[k]; });
+    KEEP = Object.assign(KEEP, { fields: keepFields, ort: S.proj.ort, gs: S.proj.gs, vonName: S.proj.vonName, vonPos: S.proj.vonPos, vonTel: S.proj.vonTel, sign: S.sign });
+    localStorage.setItem(KEEP_KEY, JSON.stringify(KEEP));
+    localStorage.setItem(KEY, JSON.stringify(S)); storageFull = false;
+  } catch (e) { storageFull = true; }
+}
 
 const itemsFor = (v, sec) => ITEMS.filter(i => i.v.includes(v) && (!sec || i.s === sec));
 const secsFor = (v) => SECTIONS.filter(s => itemsFor(v, s.id).length);
 const st = (id) => S.items[id] || (S.items[id] = { mode: null, opt: null });
 
-function fmtDate(v) { if (!v) return ""; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); return m ? `${m[3]}.${m[2]}.${m[1]}` : v; }
+function fmtDate(v, sep = ".") { if (!v) return ""; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); return m ? `${m[3]}${sep}${m[2]}${sep}${m[1]}` : v; }
 function fieldVal(k) {
   const f = F[k]; let v = S.fields[k];
   if (v === undefined || v === "") v = f.d !== undefined ? f.d : (f.t === "select" ? f.o[0] : "");
   if (f.t === "date") v = fmtDate(v);
   return v;
 }
-const esc = (s) => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // Text rendern; html=true markiert leere Platzhalter
 function render(tpl, fields, html) {
@@ -469,63 +497,103 @@ function applyDefaults(v) {
 // ============================================================ UI
 const $ = (sel) => document.querySelector(sel);
 const view = $("#view"), stepsEl = $("#steps"), metaEl = $("#meta"), bar = $("#bar");
+// Schritte: 0 = Projekt & Teilnehmer, 1..n = Betreffe, n+1 = Protokoll
+const steps = () => { const secs = S.variant ? secsFor(S.variant) : []; return [{ id: "proj", name: "Projekt" }, ...secs, { id: "pdf", name: "Protokoll" }]; };
 
 function draw() {
   const v = S.variant;
-  const secs = v ? secsFor(v) : [];
-  const total = secs.length + 1; // + Ausgabe
-  // Kopf
-  metaEl.innerHTML = v ? `<span class="chip">${VARIANTS[v].k} ${esc(VARIANTS[v].name)}</span>${S.komNr ? `<span>Kom ${esc(S.komNr)}</span>` : ""}` : "";
+  const sts = steps(); const secs = sts.slice(1, -1);
+  metaEl.innerHTML = v ? `<span class="chip">${VARIANTS[v].k} ${esc(VARIANTS[v].name)}</span>${S.proj.komNr ? `<span>Kom ${esc(S.proj.komNr)}</span>` : ""}` : "";
   stepsEl.innerHTML = "";
-  if (v) {
-    secs.forEach((sec, i) => {
-      const its = itemsFor(v, sec.id); const open = its.filter(it => itemState(it) === "open").length;
-      const b = document.createElement("button"); b.className = "step"; b.type = "button";
-      if (S.step === i) b.setAttribute("aria-current", "step");
-      b.innerHTML = `${esc(sec.name)} <span class="n ${open ? "open" : "done"}">${open ? open + " offen" : "✓"}</span>`;
-      b.onclick = () => go(i); stepsEl.appendChild(b);
-    });
+  if (!v || S.choose) { drawStart(); bar.hidden = true; return; }
+  if (S.step >= sts.length) S.step = sts.length - 1;
+  sts.forEach((sp, i) => {
     const b = document.createElement("button"); b.className = "step"; b.type = "button";
-    if (S.step === secs.length) b.setAttribute("aria-current", "step");
-    b.textContent = "Textbausteine"; b.onclick = () => go(secs.length); stepsEl.appendChild(b);
-  }
-  // Inhalt
-  if (!v || S.choose) { stepsEl.innerHTML = ""; drawStart(); bar.hidden = true; return; }
+    if (S.step === i) b.setAttribute("aria-current", "step");
+    if (sp.id === "proj") { const ok = S.proj.name && S.proj.komNr && S.teiln.length; b.innerHTML = `Projekt <span class="n ${ok ? "done" : "open"}">${ok ? "✓" : "offen"}</span>`; }
+    else if (sp.id === "pdf") b.textContent = "Protokoll";
+    else { const open = itemsFor(v, sp.id).filter(it => itemState(it) === "open").length; b.innerHTML = `${esc(sp.name)} <span class="n ${open ? "open" : "done"}">${open ? open + " offen" : "✓"}</span>`; }
+    b.onclick = () => go(i); stepsEl.appendChild(b);
+  });
   bar.hidden = false;
-  if (S.step >= secs.length) { drawOutput(secs); }
-  else drawSection(secs[S.step], S.step, secs.length);
+  const sp = sts[S.step];
+  if (sp.id === "proj") drawProject();
+  else if (sp.id === "pdf") drawFinal(secs);
+  else drawSection(sp, S.step, secs.length);
   $("#btnPrev").textContent = S.step === 0 ? "Variante" : "Zurück";
-  $("#btnNext").textContent = S.step >= secs.length ? "Fertig" : (S.step === secs.length - 1 ? "Textbausteine" : "Weiter");
-  $("#btnNext").hidden = S.step >= secs.length;
+  $("#btnNext").textContent = S.step === sts.length - 2 ? "Protokoll" : "Weiter";
+  $("#btnNext").hidden = S.step >= sts.length - 1;
   const allOpen = itemsFor(v).filter(it => itemState(it) === "open").length;
-  $("#barStatus").textContent = S.step >= secs.length ? "" : `Schritt ${S.step + 1} von ${total} · ${allOpen ? allOpen + " Punkte offen" : "alle Punkte entschieden"}`;
+  $("#barStatus").textContent = sp.id === "pdf" ? "" : `Schritt ${S.step + 1} von ${sts.length} · ${allOpen ? allOpen + " Punkte offen" : "alle Punkte entschieden"}`;
+  if (storageFull) $("#barStatus").textContent = "Speicher voll – weniger/kleinere Fotos";
 }
 function go(i) { S.step = i; save(); draw(); window.scrollTo({ top: 0 }); }
+function redraw() { const y = window.scrollY; draw(); window.scrollTo({ top: y }); }
 
+// ------------------------------------------------ Start: Variante
 function drawStart() {
   view.innerHTML = `
     <h2>Welche Anlage?</h2>
-    <p class="lead">Wähle die Variante. Danach gehst du die Bausitzung Betreff für Betreff durch, entscheidest pro Punkt «aufnehmen» oder «weglassen» und trägst die Angaben ein. Am Schluss bekommst du die fertigen Textbausteine zum Kopieren in MoreApp.</p>
-    <div class="project">
-      <div class="field pfield"><label for="komNr">Kom Nr. (optional)</label><input id="komNr" inputmode="numeric" placeholder="z. B. 20135803" value="${esc(S.komNr)}"></div>
-      <div class="field pfield"><label for="projekt">Projekt / Adresse (optional)</label><input id="projekt" placeholder="z. B. Hochwangstrasse 5, Landquart" value="${esc(S.projekt)}"></div>
-    </div>
+    <p class="lead">Wähle die Variante. Danach erfasst du Projekt und Teilnehmer, gehst die Bausitzung Betreff für Betreff durch und erstellst am Schluss das Protokoll als PDF.</p>
     <div class="variants" id="variants"></div>
-    ${hasDraft() ? `<div class="notice warn" style="margin-top:16px">Es gibt einen angefangenen Entwurf${S.komNr ? " (Kom " + esc(S.komNr) + ")" : ""}. Die gleiche Variante wählen führt ihn weiter; <button class="btn small" id="btnReset" type="button">Neu beginnen</button> löscht alle Eingaben.</div>` : ""}
+    ${hasDraft() ? `<div class="notice warn" style="margin-top:16px">Es gibt einen angefangenen Entwurf${S.proj.komNr ? " (Kom " + esc(S.proj.komNr) + ")" : ""}. Die gleiche Variante wählen führt ihn weiter; <button class="btn small" id="btnReset" type="button">Neu beginnen</button> löscht alle Eingaben.</div>` : ""}
   `;
-  $("#komNr").oninput = e => { S.komNr = e.target.value; save(); };
-  $("#projekt").oninput = e => { S.projekt = e.target.value; save(); };
   const vs = $("#variants");
   [1,2,3].forEach(n => {
     const b = document.createElement("button"); b.type = "button"; b.className = "vcard";
     b.innerHTML = `<span class="t"><span class="k">${VARIANTS[n].k}</span>${esc(VARIANTS[n].name)}</span><span class="d">${esc(VARIANTS[n].desc)}</span>`;
-    b.onclick = () => { if (S.variant && S.variant !== n) { S.items = {}; } S.variant = n; S.choose = false; applyDefaults(n); S.step = 0; save(); draw(); window.scrollTo({ top: 0 }); };
+    b.onclick = () => { if (S.variant && S.variant !== n) { S.items = {}; } S.variant = n; S.choose = false; applyDefaults(n); if (!S.teiln.length) S.teiln.push({ fn: "Montagechef", name: S.proj.vonName, tel: S.proj.vonTel, mail: "" }); S.step = 0; save(); draw(); window.scrollTo({ top: 0 }); };
     vs.appendChild(b);
   });
   const r = $("#btnReset"); if (r) r.onclick = () => { S = blank(); save(); draw(); };
 }
-function hasDraft() { return Object.keys(S.items).length || Object.keys(S.fields).length; }
+function hasDraft() { return Object.keys(S.items).length || S.proj.name || S.proj.komNr; }
 
+// ------------------------------------------------ Projekt & Teilnehmer
+const pf = (key, label, ph, type = "text", extra = "") => `<div class="field"><label for="p-${key}">${label}</label><input id="p-${key}" data-p="${key}" type="${type}" placeholder="${esc(ph)}" value="${esc(S.proj[key])}" ${extra}></div>`;
+function drawProject() {
+  const p = S.proj;
+  let h = `<h2>Projekt</h2><p class="lead">Kopfdaten des Protokolls, wie im MoreApp-Formular. Geschäftsstelle, Verfasser und Ort merkt sich die App.</p>
+    <div class="card"><div class="eyebrow">Projektdetails</div><div class="fields">
+      ${pf("name", "Projektname", "z. B. Wohnüberbauung Musterweg")}
+      ${pf("komNr", "Kom Nr.", "z. B. 12345678", "text", 'inputmode="numeric"')}
+      ${pf("typ", "Typ", "z. B. S3000 ES1.2")}
+      ${pf("strasse", "Strasse Nr.", "z. B. Musterstrasse 1")}
+      ${pf("plzOrt", "PLZ Ort", "z. B. 7000 Chur")}
+      ${pf("gs", "Geschäftsstelle", "AS-OS")}
+    </div></div>
+    <div class="card"><div class="eyebrow">Erstellung</div><div class="fields">
+      ${pf("vonName", "Erstellt von", "Vorname Name")}
+      ${pf("vonPos", "Funktion", "Installation Supervisor")}
+      ${pf("vonTel", "Telefon Verfasser", "079 …", "tel")}
+      ${pf("datum", "Datum", "", "date")}
+      ${pf("ort", "Ort", "Chur")}
+    </div></div>
+    <h2 style="font-size:17px">Teilnehmer</h2>
+    <div class="teiln" id="teiln"></div>
+    <div><button type="button" class="btn small" id="addT">+ Teilnehmer hinzufügen</button></div>`;
+  view.innerHTML = h;
+  view.querySelectorAll("[data-p]").forEach(inp => { inp.oninput = () => { S.proj[inp.dataset.p] = inp.value; save(); if (inp.dataset.p === "komNr") metaEl.innerHTML = `<span class="chip">${VARIANTS[S.variant].k} ${esc(VARIANTS[S.variant].name)}</span>${S.proj.komNr ? `<span>Kom ${esc(S.proj.komNr)}</span>` : ""}`; }; });
+  drawTeiln();
+  $("#addT").onclick = () => { S.teiln.push({ fn: "", name: "", tel: "", mail: "" }); save(); drawTeiln(); const last = view.querySelectorAll(".trow"); last[last.length - 1].querySelector("select").focus(); };
+}
+function drawTeiln() {
+  const el = $("#teiln");
+  el.innerHTML = S.teiln.map((t, i) => `<div class="trow" data-i="${i}">
+      <div class="field"><label>Funktion</label><select data-t="fn"><option value="">– wählen –</option>${FUNKTIONEN.map(f => `<option ${t.fn === f ? "selected" : ""}>${f}</option>`).join("")}</select></div>
+      <div class="field"><label>Name</label><input data-t="name" placeholder="Vorname Name" value="${esc(t.name)}"></div>
+      <div class="field"><label>Telefon</label><input data-t="tel" type="tel" placeholder="079 …" value="${esc(t.tel)}"></div>
+      <div class="field"><label>E-Mail</label><input data-t="mail" type="email" placeholder="name@firma.ch" value="${esc(t.mail)}"></div>
+      <button type="button" class="btn small ghost" data-rm="${i}">Entfernen</button>
+    </div>`).join("") || `<div class="notice warn">Noch keine Teilnehmer.</div>`;
+  el.querySelectorAll(".trow").forEach(row => {
+    const i = +row.dataset.i;
+    row.querySelectorAll("[data-t]").forEach(inp => { const upd = () => { S.teiln[i][inp.dataset.t] = inp.value; save(); }; inp.oninput = upd; inp.onchange = upd; });
+  });
+  el.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { S.teiln.splice(+b.dataset.rm, 1); save(); drawTeiln(); });
+}
+
+// ------------------------------------------------ Betreff-Seiten
 function fieldHtml(k, it) {
   const f = F[k]; const id = `f-${it.id}-${k}`; const val = S.fields[k] ?? (f.d ?? "");
   let ctrl;
@@ -538,7 +606,7 @@ function fieldHtml(k, it) {
 function drawSection(sec, idx, n) {
   const v = S.variant; const its = itemsFor(v, sec.id);
   const intro = { org: "Was der Bauherr / die Verwaltung bereitstellt.", dem: "Rückbau, Mulde, Abdecken, Vorarbeiten im Schacht.", ele: "Steht teilweise auch im Dispoplan, geht aber gerne vergessen.", bau: "Wie Demonteur, ohne Demontage. Staubschleuse nicht vergessen.", sch: "Lastträger vor der Demontage, Aufmass, Blenden.", mal: "Ölanstrich Maschinenraum und Schachtgrube.", gip: "Zargen und alte Öffnungen.", hin: "Optional. Standardtexte, die du ans Ende des Protokolls stellen kannst." }[sec.id] || "";
-  let h = `<h2>${idx + 1}. Besprechungsnotiz – ${esc(sec.name)}</h2><p class="lead">${esc(intro)}</p><div class="items">`;
+  let h = `<h2>${idx}. Besprechungsnotiz – ${esc(sec.name)}</h2><p class="lead">${esc(intro)}</p><div class="items">`;
   its.forEach(it => {
     const s = st(it.id); const state = itemState(it);
     h += `<div class="item ${s.mode === "out" ? "out" : ""} ${state === "open" ? "open-state" : ""} ${it.star ? "star" : ""}" data-id="${it.id}">
@@ -560,6 +628,11 @@ function drawSection(sec, idx, n) {
     ${cs.length ? `<div class="customs">${cs.map((c, i) => `<div class="cline"><span>${esc(c)}</span><button type="button" class="btn small ghost" data-del="${i}">Löschen</button></div>`).join("")}</div>` : ""}
     <textarea id="customIn" placeholder="Kleine Ergänzung, die nur bei diesem Projekt gilt …"></textarea>
     <div><button type="button" class="btn small" id="customAdd">Zeile hinzufügen</button></div></div>`;
+  // Fotos
+  const ph = S.photos[sec.id] || [];
+  h += `<div class="custom" style="margin-top:10px"><div class="eyebrow">Fotos zu ${esc(sec.name)}</div>
+    <div class="thumbs">${ph.map((p, i) => `<div class="thumb"><img src="${p}" alt=""><button type="button" class="x" data-pdel="${i}" aria-label="Foto entfernen">×</button></div>`).join("")}</div>
+    <label class="btn small" for="photoIn">+ Foto aufnehmen / wählen</label><input id="photoIn" type="file" accept="image/*" multiple hidden></div>`;
   view.innerHTML = h;
 
   // Events
@@ -574,45 +647,198 @@ function drawSection(sec, idx, n) {
   });
   $("#customAdd").onclick = () => { const t = $("#customIn").value.trim(); if (!t) return; (S.custom[sec.id] = S.custom[sec.id] || []).push(t); save(); redraw(); };
   view.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.custom[sec.id].splice(+b.dataset.del, 1); save(); redraw(); });
+  view.querySelectorAll("[data-pdel]").forEach(b => b.onclick = () => { S.photos[sec.id].splice(+b.dataset.pdel, 1); save(); redraw(); });
+  $("#photoIn").onchange = async (e) => {
+    const files = [...e.target.files]; if (!files.length) return;
+    for (const f of files) { try { const d = await shrink(f, 1100, 0.68); (S.photos[sec.id] = S.photos[sec.id] || []).push(d); } catch (err) {} }
+    save(); redraw();
+  };
 }
-// gleiches Feld in anderen Karten mitziehen (z. B. Kernbohrung bei Demonteur und Baumeister)
 function syncField(k, src) {
   view.querySelectorAll(`[data-k="${k}"]`).forEach(o => { if (o !== src) { o.value = src.value; const card = o.closest(".item"); const it = ITEMS.find(x => x.id === card.dataset.id); const pv = card.querySelector(".preview"); if (pv) pv.innerHTML = itemText(it, true); } });
 }
-function redraw() { const y = window.scrollY; draw(); window.scrollTo({ top: y }); }
+function shrink(file, max, q) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => { const sc = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", q)); };
+    img.onerror = rej; img.src = url;
+  });
+}
 
+// ------------------------------------------------ Abschluss: Unterschrift, PDF, Texte
 function outputBlocks(secs) {
   return secs.map(sec => {
     const lines = itemsFor(S.variant, sec.id).filter(it => itemState(it) === "in").map(it => itemText(it, false)).filter(Boolean);
     (S.custom[sec.id] || []).forEach(c => lines.push(c));
-    return { sec, lines };
-  }).filter(b => b.lines.length);
+    return { sec, lines, photos: S.photos[sec.id] || [] };
+  }).filter(b => b.lines.length || b.photos.length);
 }
-function drawOutput(secs) {
+function drawFinal(secs) {
   const blocks = outputBlocks(secs);
   const open = itemsFor(S.variant).filter(it => itemState(it) === "open");
   const missing = blocks.reduce((n, b) => n + b.lines.filter(l => /\[[^\]]+\]/.test(l)).length, 0);
-  let h = `<h2>Textbausteine${S.komNr ? ` · Kom ${esc(S.komNr)}` : ""}</h2>
-    <p class="lead">${VARIANTS[S.variant].k} ${esc(VARIANTS[S.variant].name)}${S.projekt ? " · " + esc(S.projekt) : ""}. Pro Betreff eine Besprechungsnotiz in MoreApp; jede Zeile ist ein Eintrag «Beschreibung Notizen».</p>`;
-  if (open.length) h += `<div class="notice warn">${open.length} Punkt${open.length > 1 ? "e" : ""} noch nicht entschieden: ${open.map(it => esc(it.l)).join(", ")}. Diese fehlen unten.</div>`;
+  const projMissing = ["name", "komNr"].filter(k => !S.proj[k]);
+  let h = `<h2>Protokoll${S.proj.komNr ? ` · Kom ${esc(S.proj.komNr)}` : ""}</h2>
+    <p class="lead">${VARIANTS[S.variant].k} ${esc(VARIANTS[S.variant].name)}${S.proj.name ? " · " + esc(S.proj.name) : ""}. Unterschreiben, PDF erstellen, teilen oder herunterladen.</p>`;
+  if (projMissing.length) h += `<div class="notice warn">Projektname oder Kom Nr. fehlt noch (Schritt «Projekt»).</div>`;
+  if (!S.teiln.length) h += `<div class="notice warn">Keine Teilnehmer erfasst.</div>`;
+  if (open.length) h += `<div class="notice warn">${open.length} Punkt${open.length > 1 ? "e" : ""} noch nicht entschieden: ${open.map(it => esc(it.l)).join(", ")}. Diese fehlen im Protokoll.</div>`;
   if (missing) h += `<div class="notice warn">${missing} Zeile${missing > 1 ? "n" : ""} enthalten noch Platzhalter in [eckigen Klammern].</div>`;
-  if (!open.length && !missing) h += `<div class="notice good">Alle Punkte entschieden, keine offenen Platzhalter.</div>`;
-  h += `<div class="rowbtns"><button type="button" class="btn primary" id="copyAll">Alles kopieren</button><button type="button" class="btn" id="btnEdit">Zurück zum Bearbeiten</button><button type="button" class="btn ghost" id="btnNew">Neues Protokoll</button></div><div id="confirmNew"></div>`;
+  if (!open.length && !missing && !projMissing.length) h += `<div class="notice good">Alles vollständig.</div>`;
+  h += `<div class="card"><div class="eyebrow">Unterschrift ${esc(S.proj.vonName || "Verfasser")}</div>
+    <canvas id="sig" class="sig" width="800" height="240"></canvas>
+    <div class="rowbtns" style="margin:8px 0 0"><button type="button" class="btn small" id="sigClear">Löschen</button><span class="hint">Wird gemerkt und beim nächsten Protokoll wiederverwendet.</span></div></div>`;
+  h += `<div class="rowbtns"><button type="button" class="btn primary" id="pdfShare">PDF teilen / per Mail</button><button type="button" class="btn" id="pdfDown">PDF herunterladen</button><button type="button" class="btn ghost" id="btnNew">Neues Protokoll</button></div><div id="pdfMsg"></div><div id="confirmNew"></div>`;
+  h += `<details class="texts"><summary>Textbausteine zum Kopieren (für MoreApp)</summary><div class="rowbtns" style="margin-top:10px"><button type="button" class="btn small" id="copyAll">Alles kopieren</button></div>`;
   blocks.forEach((b, bi) => {
-    h += `<div class="out-sec"><div class="out-h"><div class="t">${bi + 1}. ${esc(b.sec.name)}<small>${b.lines.length} Zeile${b.lines.length > 1 ? "n" : ""}</small></div><button type="button" class="btn small" data-copysec="${b.sec.id}">Betreff kopieren</button></div><div class="lines">`;
+    h += `<div class="out-sec"><div class="out-h"><div class="t">${bi + 1}. ${esc(b.sec.name)}<small>${b.lines.length} Zeile${b.lines.length === 1 ? "" : "n"}</small></div><button type="button" class="btn small" data-copysec="${b.sec.id}">Betreff kopieren</button></div><div class="lines">`;
     b.lines.forEach((l, i) => { h += `<div class="line"><span class="n">${i + 1}</span><span class="tx">${esc(l).replace(/\[[^\]]+\]/g, m => `<span class="ph">${m}</span>`)}</span><button type="button" class="btn small ghost cp" data-copy="${bi}:${i}">Kopieren</button></div>`; });
     h += `</div></div>`;
   });
-  if (!blocks.length) h += `<div class="notice warn">Noch keine Zeilen aufgenommen.</div>`;
+  h += `</details>`;
   view.innerHTML = h;
+  initSig();
   const secText = (b) => b.lines.join("\n");
   const allText = blocks.map((b, i) => `${i + 1}. ${b.sec.name}\n${secText(b)}`).join("\n\n");
   $("#copyAll").onclick = (e) => copy(allText, e.currentTarget);
-  $("#btnEdit").onclick = () => go(0);
   $("#btnNew").onclick = () => { $("#confirmNew").innerHTML = `<div class="notice warn confirm">Alle Eingaben löschen und neu beginnen? <button type="button" class="btn small" id="yesNew">Ja, löschen</button><button type="button" class="btn small ghost" id="noNew">Abbrechen</button></div>`; $("#yesNew").onclick = () => { S = blank(); save(); draw(); window.scrollTo({ top: 0 }); }; $("#noNew").onclick = () => $("#confirmNew").innerHTML = ""; };
   view.querySelectorAll("[data-copysec]").forEach(b => b.onclick = (e) => copy(secText(blocks.find(x => x.sec.id === b.dataset.copysec)), e.currentTarget));
   view.querySelectorAll("[data-copy]").forEach(b => b.onclick = (e) => { const [bi, i] = b.dataset.copy.split(":").map(Number); copy(blocks[bi].lines[i], e.currentTarget); });
+  $("#pdfShare").onclick = () => exportPdf(blocks, "share");
+  $("#pdfDown").onclick = () => exportPdf(blocks, "download");
 }
+
+// Unterschrift
+function initSig() {
+  const c = $("#sig"); const ctx = c.getContext("2d");
+  const paint = () => { ctx.clearRect(0, 0, c.width, c.height); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); if (S.sign) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, c.width, c.height); im.src = S.sign; } };
+  paint();
+  ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#111";
+  let drawing = false;
+  const pos = (e) => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; };
+  c.onpointerdown = (e) => { drawing = true; c.setPointerCapture(e.pointerId); const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); e.preventDefault(); };
+  c.onpointermove = (e) => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); e.preventDefault(); };
+  const end = () => { if (!drawing) return; drawing = false; S.sign = c.toDataURL("image/png"); save(); };
+  c.onpointerup = end; c.onpointercancel = end; c.onpointerleave = end;
+  $("#sigClear").onclick = () => { S.sign = ""; save(); paint(); };
+}
+
+// ------------------------------------------------ PDF (Layout wie das MoreApp-Protokoll)
+const LOGO = "data:image/jpeg;base64,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";
+function buildPdf(blocks) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const p = S.proj; const L = 13, R = 197, W = R - L; let y = 0; let page = 1;
+  const grey = [217, 217, 217];
+  const title = `Besprechungsprotokoll von dem Projekt: ${p.name || ""}`;
+  const footerLeft = `Besprechungsprotokoll Projekt: ${p.name || ""}`;
+  const header = () => {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(0); doc.text("AS Aufzüge AG", L, 18);
+    doc.setFont("helvetica", "normal"); doc.text(p.gs || "AS-OS", L, 23);
+    doc.addImage(LOGO, "JPEG", R - 45, 11, 45, 12.4);
+    y = 31;
+  };
+  const footer = () => {
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(0);
+    doc.text(footerLeft, L, 287);
+    doc.text(`Seite ${page} von {tot}`, R, 287, { align: "right" });
+  };
+  const newPage = () => { footer(); doc.addPage(); page++; header(); };
+  const need = (h) => { if (y + h > 278) newPage(); };
+  const bar = (text) => { need(12); doc.setFillColor(...grey); doc.rect(L, y, W, 6, "F"); doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.text(text, L + 2.5, y + 4.2); y += 9; };
+  const kv = (x, k, v, yy) => { doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(k, x + 2.5, yy); doc.text(String(v || ""), x + 32, yy); };
+  const para = (label, text, indent) => {
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    const lines = doc.splitTextToSize(text, W - indent - 2.5);
+    need(lines.length * 4.3 + 2);
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text(label, L + 2.5, y);
+    doc.text(lines, L + indent, y);
+    y += lines.length * 4.3 + 2.4;
+  };
+
+  header();
+  doc.setFont("helvetica", "normal"); doc.setFontSize(15); doc.text(title, L, y + 4); y += 11;
+
+  // Projektdetails / Erstellung
+  const colW = (W - 5) / 2; const x2 = L + colW + 5;
+  doc.setFillColor(...grey); doc.rect(L, y, colW, 6, "F"); doc.rect(x2, y, colW, 6, "F");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.text("Projektdetails", L + 2.5, y + 4.2); doc.text("Erstellung", x2 + 2.5, y + 4.2);
+  let yy = y + 11;
+  kv(L, "Kom. Nr.", p.komNr, yy); kv(L, "Typ", p.typ, yy + 4.2); kv(L, "Standortadresse", p.strasse, yy + 8.4); kv(L, "", p.plzOrt, yy + 12.6);
+  kv(x2, "Von", p.vonName, yy); kv(x2, "", p.vonPos, yy + 4.2); kv(x2, "Datum", fmtDate(p.datum, "-"), yy + 8.4); kv(x2, "Ort", p.ort, yy + 12.6);
+  y = yy + 18;
+
+  // Teilnehmer
+  bar("Teilnehmer");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.text("Die aufgeführten Personen haben an der Baubesprechung teilgenommen:", L + 2.5, y); y += 6;
+  S.teiln.forEach(t => {
+    need(5); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+    const right = [t.name, t.tel, t.mail].filter(Boolean).join(" | ");
+    doc.text((t.fn || "Teilnehmer") + ":", L + 6, y); doc.text(right, L + 56, y); y += 4.3;
+  });
+  y += 3;
+
+  // Besprechungsnotizen
+  blocks.forEach((b, i) => {
+    bar(`${i + 1}.  Besprechungsnotiz`);
+    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text("Betreff:", L + 2.5, y); doc.setFont("helvetica", "normal"); doc.text(b.sec.name, L + 16, y); y += 6;
+    b.lines.forEach(l => para("Beschreibung:", l, 25));
+    if (b.photos.length) {
+      const pw = (W - 4) / 3, phh = 42;
+      b.photos.forEach((src, k) => {
+        if (k % 3 === 0) { need(phh + 3); }
+        const dims = imgDims(src); const sc = Math.min(pw / dims.w, phh / dims.h); const w = dims.w * sc, h = dims.h * sc;
+        const x = L + (k % 3) * (pw + 2);
+        try { doc.addImage(src, "JPEG", x, y, w, h); } catch (e) {}
+        if (k % 3 === 2 || k === b.photos.length - 1) y += phh + 3;
+      });
+    }
+    y += 2;
+  });
+
+  // Unterschriften (neue Seite wie im Original)
+  newPage();
+  bar("Unterschriften");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.text("Ohne schriftlichen Gegenbericht innerhalb 5 Arbeitstage gilt das Protokoll als freigegeben und genehmigt.", L + 2.5, y); y += 8;
+  doc.text(`Ort / Datum: ${p.ort || ""}, ${fmtDate(p.datum, "-")}`, L + 2.5, y); y += 6;
+  doc.text("AS Aufzüge AG", L + 2.5, y); y += 8;
+  if (S.sign) { try { doc.addImage(S.sign, "PNG", L + 2.5, y, 50, 15); } catch (e) {} }
+  y += 24;
+  doc.text(p.vonName || "", L + 2.5, y); doc.text(p.vonPos || "", L + 2.5, y + 4.2);
+  footer();
+  if (typeof doc.putTotalPages === "function") doc.putTotalPages("{tot}");
+  return doc;
+}
+const dimCache = {};
+function imgDims(src) { if (dimCache[src]) return dimCache[src]; const im = new Image(); im.src = src; return dimCache[src] = { w: im.naturalWidth || 4, h: im.naturalHeight || 3 }; }
+function preloadDims(blocks) { return Promise.all(blocks.flatMap(b => b.photos).map(src => new Promise(res => { const im = new Image(); im.onload = () => { dimCache[src] = { w: im.naturalWidth, h: im.naturalHeight }; res(); }; im.onerror = res; im.src = src; }))); }
+async function exportPdf(blocks, mode) {
+  const msg = $("#pdfMsg"); msg.innerHTML = `<div class="notice good">PDF wird erstellt …</div>`;
+  try {
+    if (!window.jspdf) throw new Error("PDF-Bibliothek nicht geladen (kein Internet?).");
+    await preloadDims(blocks);
+    const doc = buildPdf(blocks);
+    const safe = (s) => String(s || "").replace(/[^\wäöüÄÖÜ-]+/g, "_").replace(/^_+|_+$/g, "");
+    const name = `Besprechungsprotokoll_Projekt_${safe(S.proj.name) || "Bausitzung"}_${safe(S.proj.komNr)}.pdf`;
+    const blob = doc.output("blob");
+    const file = new File([blob], name, { type: "application/pdf" });
+    if (mode === "share" && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      msg.innerHTML = `<div class="notice good">PDF übergeben.</div>`; return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    msg.innerHTML = `<div class="notice good">PDF «${esc(name)}» ${mode === "share" ? "wurde heruntergeladen (Teilen wird von diesem Browser nicht unterstützt)" : "heruntergeladen"}.</div>`;
+  } catch (e) {
+    if (e && e.name === "AbortError") { msg.innerHTML = ""; return; }
+    msg.innerHTML = `<div class="notice warn">PDF konnte nicht erstellt werden: ${esc(e.message || e)}</div>`;
+  }
+}
+
 function copy(text, btn) {
   const done = () => { const old = btn.textContent; btn.textContent = "Kopiert"; btn.classList.add("copied"); setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1400); };
   const fb = () => { const ta = $("#fallback"); ta.value = text; ta.style.left = "0"; ta.focus(); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.style.left = "-9999px"; if (ok) done(); else { btn.textContent = "Text markieren"; } };
@@ -622,7 +848,6 @@ function copy(text, btn) {
 $("#btnPrev").onclick = () => { if (S.step === 0) { S.choose = true; save(); draw(); window.scrollTo({ top: 0 }); } else go(S.step - 1); };
 $("#btnNext").onclick = () => go(S.step + 1);
 
-// Start: Variante gewählt → weiter; sonst Startseite. Bei zurück zur Variantenwahl bleibt der Entwurf erhalten.
 if (S.variant) applyDefaults(S.variant);
 draw();
 </script>
