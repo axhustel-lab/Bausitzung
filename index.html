@@ -41,6 +41,7 @@
   .top-in { max-width: 720px; margin: 0 auto; padding: 10px 16px 0; }
   .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .brand h1 .ver { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; letter-spacing: .02em; }
   .brand h1 .mark { width: 10px; height: 10px; background: var(--accent); clip-path: polygon(50% 0, 100% 100%, 0 100%); display: inline-block; }
   .brand .meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; align-items: center; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
@@ -180,7 +181,7 @@
 
 <div class="top"><div class="top-in">
   <div class="brand">
-    <h1><span class="mark"></span>Bausitzung Baukasten</h1>
+    <h1><span class="mark"></span>Bausitzung Baukasten <span class="ver" id="ver"></span></h1>
     <div class="meta" id="meta"></div>
   </div>
   <div class="steps" id="steps"></div>
@@ -206,6 +207,7 @@ const VARIANTS = {
 };
 const SECTIONS = [
   { id: "org", name: "Organisation" },
+  { id: "asb", name: "Asbest / Schadstoffe" },
   { id: "dem", name: "Demonteur" },
   { id: "ele", name: "Elektriker" },
   { id: "bau", name: "Baumeister" },
@@ -257,7 +259,13 @@ const F = {
   demTel: { l: "Telefon", ph: "Telefon" },
   muldeM3: { l: "Mulde (m³)", t: "number", ph: "x" },
   muldeWer: { l: "Bestellt durch", t: "select", o: ["Demonteur", "AS", "Baumeister", "Verwaltung"] },
-  muldeOrt: { l: "Stellplatz", ph: "Ort" },
+  muldeOrt: { l: "Stellplatz", t: "select", o: ["gemäss Foto", "in der Einfahrt", "vor dem Gebäude", "auf dem Parkplatz", "auf dem Trottoir (Bewilligung nötig)"] },
+  muldeZus: { l: "Ergänzung (optional)", opt: true, hint: "z. B. ab Montag 7 Uhr, max. 7 m³" },
+  asbBericht: { l: "Schadstoffbericht", t: "select", o: ["liegt vor", "wird durch Bauherrn beschafft"] },
+  asbFirma: { l: "Spezialunternehmen", ph: "Firma" },
+  asbVon: { l: "Sanierung ab", t: "date" },
+  asbDauer: { l: "Dauer (Arbeitstage)", t: "number", ph: "x" },
+  asbWas: { l: "Betroffene Bauteile", ph: "z. B. Bremsbeläge, Türdichtungen, Schachtwände" },
   muldeBew: { l: "Bewilligung öffentl. Grund durch", t: "select", o: ["Demonteur", "Verwaltung", "nicht nötig"] },
   abdMat: { l: "Abdeckung mit", t: "select", o: ["Hartfaserplatten", "Vlies", "Karton", "Hartfaserplatten und Vlies"] },
   abdM2: { l: "Fläche (m²)", t: "number", ph: "x" },
@@ -378,6 +386,13 @@ const ITEMS = [
   { id: "mrschl", s: "org", v: [2,3], l: "MR-Schlüssel", tpl: "Maschinenraumschlüssel: {mrSchlAnz} Stk. werden am {mrSchlDatum} an AS übergeben.", f: ["mrSchlAnz","mrSchlDatum"] },
   { id: "oelanl", s: "org", v: [3], l: "Öl-Anlieferung", tpl: "Öl-Anlieferung: Zufahrt für Öllieferung bis {oelZufahrt}. Öl wird durch AS geliefert ({oelLiter} Liter).", f: ["oelZufahrt","oelLiter"] },
 
+  // ---------------- Asbest / Schadstoffe (Spezialunternehmen)
+  { id: "asbb", s: "asb", v: [1,2,3], l: "Schadstoffbericht", tpl: "Schadstoffbericht (Asbest/PCB): {asbBericht}. Ohne Freigabe keine Demontage- und Bauarbeiten an belasteten Bauteilen.", f: ["asbBericht"] },
+  { id: "asbs", s: "asb", v: [1,2,3], l: "Asbestsanierung durch Spezialunternehmen", tpl: "Asbestsanierung: Sanierung der belasteten Bauteile ({asbWas}) durch Spezialunternehmen {asbFirma} gemäss Schadstoffbericht, ab {asbVon}, Dauer ca. {asbDauer} Arbeitstage, vor Beginn der Demontage.", f: ["asbWas","asbFirma","asbVon","asbDauer"] },
+  { id: "asbz", s: "asb", v: [1,2,3], l: "Sanierungszone / Zugang", tpl: "Während der Sanierung sind Schacht, Maschinenraum und Vorplätze als Sanierungszone abgeschrankt; kein Zutritt für andere Gewerke. Bewohnerinformation durch die Verwaltung." },
+  { id: "asbf", s: "asb", v: [1,2,3], l: "Freimessung / Freigabe", tpl: "Freimessung und schriftliche Freigabe durch das Spezialunternehmen vor Beginn der Demontage; Freigabeprotokoll an AS Aufzüge AG." },
+  { id: "asbe", s: "asb", v: [1,2,3], l: "Entsorgung Sondermüll", tpl: "Entsorgung der asbesthaltigen Materialien durch das Spezialunternehmen inkl. Entsorgungsnachweis." },
+
   // ---------------- Demonteur
   { id: "demT", s: "dem", v: [1], l: "Demontagetermin, Dauer, Ansprechperson", tpl: "Demontage Altanlage ab {demDatum}, Dauer ca. {demDauer} Arbeitstage.", f: ["demDatum","demDauer"] },
   { id: "demT2", s: "dem", v: [2], l: "Demontagetermin, Umfang", tpl: "Demontage ab {demDatum}, Dauer ca. {demDauer} Arbeitstage: Antrieb, Steuerung, Begrenzer, Seile, Tableaus und Drücker.", f: ["demDatum","demDauer"], hint: "Weglassen, falls AS-Monteure selber demontieren" },
@@ -385,12 +400,11 @@ const ITEMS = [
   { id: "getr", s: "dem", v: [2], l: "Getriebeöl entsorgen", tpl: "Getriebeöl: Öl der alten Antriebsmaschine absaugen und fachgerecht entsorgen (Entsorgungsnachweis)." },
   { id: "altoel", s: "dem", v: [3], l: "Altöl absaugen, Liter", tpl: "Altöl: Hydrauliköl (ca. {hydLiter} Liter) absaugen und fachgerecht entsorgen inkl. Entsorgungsnachweis. Ölwanne/Auffangwanne reinigen.", f: ["hydLiter"] },
   { id: "hydl", s: "dem", v: [3], l: "Hydraulikleitung bleibt / neu", tpl: "Hydraulikleitung: Bestehende Leitung Aggregat–Zylinder {hydLeitung}. Bei Ersatz alte Leitung demontieren.", f: ["hydLeitung"] },
-  { id: "mulde", s: "dem", v: [1,2,3], l: "Muldenstellplatz", hint: "Foto machen", photo: true, tpl: "Muldenstellplatz: Stellplatz gemäss Foto." },
+  { id: "mulde", s: "dem", v: [1,2,3], l: "Muldenstellplatz", hint: "Foto machen", photo: true, tpl: "Muldenstellplatz: Stellplatz {muldeOrt}{muldeZus}.", f: ["muldeOrt","muldeZus"] },
   { id: "abd", s: "dem", v: [1,2,3], l: "Abdecken – womit", tpl: "Abdecken: Bodenbeläge im Transportweg (Hauseingang, Treppe und Vorplätze auf allen Stockwerken) werden mit {abdMat} abgedeckt.", f: ["abdMat"] },
   { id: "abdoel", s: "dem", v: [3], l: "Ölfeste Abdeckung Aggregat", tpl: "Ölfeste Abdeckung im Bereich Aggregat und Transportweg Maschinenraum." },
   { id: "absp", s: "dem", v: [1], l: "Absperrung Schacht", tpl: "Absperrung Schacht: Schachtöffnungen werden während der Demontage durch {absperr} gesichert.", f: ["absperr"] },
   { id: "traeger", s: "dem", v: [1], l: "Stahlträger im Schachtkopf demontieren", def: "out", tpl: "Stahlträger im Schachtkopf demontieren und entsorgen." },
-  { id: "asb", s: "dem", v: [1], l: "Schadstoffe (Asbest)", def: "out", tpl: "Schadstoffe: Abklärung Asbest/PCB (Bremsbeläge, Kabel, Dichtungen) durch Bauherrn: Bericht {asbest}. Ohne Bericht keine Demontage.", f: ["asbest"] },
   { id: "sockel", s: "dem", v: [1], l: "Sockel Schachtgrube spitzen", tpl: "Sockel Schachtgrube: Puffersockel und Fundamente in der Schachtgrube spitzen und bündig abstemmen, so dass keine Stolpergefahr mehr vorhanden ist." },
   { id: "lochmr", s: "dem", v: [1], l: "Loch zum Maschinenraum zumauern", tpl: "Loch zum Maschinenraum: Seildurchführungen und Öffnungen zwischen Maschinenraum und Schacht nach Demontage zumauern (brandschutzkonform).", hint: "Weglassen bei Anlage ohne MR" },
   { id: "kern", s: "dem", v: [1,2,3], l: "Kernlochbohrung LDU", tpl: "Kernlochbohrung: {kernAnz} Stk. Kernlochbohrung Ø {kernD} cm für {kernZweck}, {kernStock}, bei {kernOrt}.", f: ["kernAnz","kernD","kernZweck","kernStock","kernOrt"] },
@@ -482,6 +496,9 @@ const ITEMS = [
   { id: "h3", s: "hin", v: [1,2,3], l: "Zusatzleistungen nur schriftlich", tpl: "Zusatzleistungen von AS Aufzüge AG werden nur nach schriftlicher Bestätigung ausgeführt und separat verrechnet." },
 ];
 
+const APP_VERSION = "10";
+document.getElementById("ver").textContent = "v" + APP_VERSION;
+
 // ============================================================ Zugang
 const GATE_HASH = "055684d31053b3769183c71c1aec732af707b3659f5d53094dd0525f3bdd463c"; // SHA-256 des Zugangscodes
 const AUTH_KEY = "bausitzung-baukasten-auth";
@@ -533,7 +550,7 @@ function loadState(pid) {
   if (S.variant) applyDefaults(S.variant);
 }
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-const FUNKTIONEN = ["Montagechef", "Bauleiter", "Bauherr", "Verwaltung", "Hauswart", "Architekt", "Demonteur", "Elektriker", "Baumeister", "Schlosser", "Maler", "Gipser", "Verkäufer AS", "Projektleiter AS", "Monteur", "Andere"];
+const FUNKTIONEN = ["Montagechef", "Bauleiter", "Bauherr", "Verwaltung", "Hauswart", "Architekt", "Asbestsanierer", "Demonteur", "Elektriker", "Baumeister", "Schlosser", "Maler", "Gipser", "Verkäufer AS", "Projektleiter AS", "Monteur", "Andere"];
 const blankProj = () => ({ name: "", komNr: "", typ: "", strasse: "", plzOrt: "", datum: today(), ort: (CUR && CUR.ort) || "Chur", gs: (CUR && CUR.gs) || "AS-OS", vonName: (CUR && CUR.name) || "", vonPos: (CUR && CUR.pos) || "Installation Supervisor", vonTel: (CUR && CUR.tel) || "", vonMail: (CUR && CUR.mail) || "" });
 const blankDoor = () => ({ bez: "", mat: "Chromstahl", ral: "", schw: "kein Schwellenblech" });
 const blank = () => ({ variant: null, choose: true, step: 0, archiveId: null, doors: [blankDoor()], items: {}, fields: Object.assign({}, KEEP.fields || {}, LEGACY_KEEP.tresorCode ? { tresorCode: LEGACY_KEEP.tresorCode } : {}), custom: {}, photos: {}, proj: blankProj(), teiln: [], sign: (CUR && CUR.sign) || "" });
@@ -592,7 +609,7 @@ function itemText(it, html) {
 }
 function itemState(it) { const s = st(it.id); if (s.mode === "out") return "out"; if (s.mode === "in" && (!it.opts || s.opt)) return "in"; return "open"; }
 function applyDefaults(v) {
-  itemsFor(v).forEach(it => { const s = st(it.id); if (it.opts && s.opt && !it.opts.find(o => o.id === s.opt)) { s.opt = null; if (s.mode === "in") s.mode = null; } if (s.mode === null && it.def === "out") s.mode = "out"; if (s.mode === null && !it.opts && !it.def) s.mode = "in"; });
+  itemsFor(v).forEach(it => { const s = st(it.id); if (it.opts && s.opt && !it.opts.find(o => o.id === s.opt)) { s.opt = null; if (s.mode === "in") s.mode = null; } if (s.mode === null) s.mode = "out"; });
 }
 
 // ============================================================ UI
@@ -600,6 +617,7 @@ const $ = (sel) => document.querySelector(sel);
 const view = $("#view"), stepsEl = $("#steps"), metaEl = $("#meta"), bar = $("#bar");
 // Schritte: 0 = Projekt & Teilnehmer, 1..n = Betreffe, n+1 = Protokoll
 let PAGE = null; // "kontakte" | "profil"
+function ensureSelf() { if (!CUR) return; const me = S.teiln.findIndex(t => t.fn === "Montagechef" && t.name === CUR.name); const row = { fn: "Montagechef", name: CUR.name, tel: CUR.tel, mail: CUR.mail || "" }; if (me < 0) S.teiln.unshift(row); else if (me > 0) { S.teiln.splice(me, 1); S.teiln.unshift(row); } }
 const steps = () => { const secs = S.variant ? secsFor(S.variant) : []; return [{ id: "proj", name: "Projekt" }, ...secs, { id: "pdf", name: "Protokoll" }]; };
 
 function draw() {
@@ -639,7 +657,7 @@ function redraw() { const y = window.scrollY; draw(); window.scrollTo({ top: y }
 // ------------------------------------------------ Zugangscode
 function drawGate() {
   view.innerHTML = `<div class="gate"><div class="card">
-    <h2>Bausitzung Baukasten</h2>
+    <h2>Bausitzung Baukasten <span class="ver">v${APP_VERSION}</span></h2>
     <p class="lead" style="margin:0">Zugangscode eingeben. Den Code bekommst du vom Montagechef.</p>
     <form id="gateForm"><div class="field"><label for="gateCode">Zugangscode</label><input id="gateCode" type="password" autocomplete="current-password" autofocus></div>
     <label class="chk" style="margin-top:8px"><input type="checkbox" id="gateKeep" checked> Auf diesem Gerät angemeldet bleiben</label>
@@ -666,7 +684,7 @@ const profileForm = (p, isNew) => `<div class="fields">
     <div class="field"><label>PIN wiederholen</label><input data-pf="pin2" type="password" inputmode="numeric" autocomplete="new-password"></div>
   </div>`;
 function readProfileForm(root) { const o = {}; root.querySelectorAll("[data-pf]").forEach(i => o[i.dataset.pf] = i.value.trim()); return o; }
-async function loginProfile(p, keep) { CUR = p; try { (keep ? localStorage : sessionStorage).setItem(CUR_KEY, p.id); } catch (e) {} loadState(p.id); draw(); window.scrollTo({ top: 0 }); }
+async function loginProfile(p, keep) { CUR = p; try { (keep ? localStorage : sessionStorage).setItem(CUR_KEY, p.id); } catch (e) {} loadState(p.id); tryPendingImport(); draw(); window.scrollTo({ top: 0 }); }
 function drawProfiles() {
   const legacyName = LEGACY_KEEP.vonName || "";
   view.innerHTML = `<div class="gate"><div class="card">
@@ -765,7 +783,7 @@ function drawStart() {
   view.innerHTML = `
     <h2>Welche Anlage?</h2>
     <p class="lead">Wähle die Variante für ein neues Protokoll. Gespeicherte Protokolle und Vorlagen findest du weiter unten im Archiv.</p>
-    <div class="rowbtns" style="margin:0 0 14px"><button type="button" class="btn small" id="goKontakte">Kontakte</button><button type="button" class="btn small" id="goProfil">Mein Profil</button></div>
+    <div class="rowbtns" style="margin:0 0 14px"><button type="button" class="btn small" id="goKontakte">Kontakte</button><button type="button" class="btn small" id="goProfil">Mein Profil</button><label class="btn small" for="prepIn">Vorbereitung laden (Datei)</label><input id="prepIn" type="file" accept="application/json,.json" hidden></div>
     <div class="variants" id="variants"></div>
     ${hasDraft() ? `<div class="notice warn" style="margin-top:16px">Es gibt einen angefangenen Entwurf${S.proj.komNr ? " (Kom " + esc(S.proj.komNr) + ")" : ""}. Die gleiche Variante wählen führt ihn weiter; <button class="btn small" id="btnReset" type="button">Neu beginnen</button> löscht alle Eingaben.</div>` : ""}
   `;
@@ -773,11 +791,12 @@ function drawStart() {
   [1,2,3].forEach(n => {
     const b = document.createElement("button"); b.type = "button"; b.className = "vcard";
     b.innerHTML = `<span class="t"><span class="k">${VARIANTS[n].k}</span>${esc(VARIANTS[n].name)}</span><span class="d">${esc(VARIANTS[n].desc)}</span>`;
-    b.onclick = () => { if (S.variant && S.variant !== n) { S.items = {}; } S.variant = n; S.choose = false; applyDefaults(n); if (!S.teiln.length) S.teiln.push({ fn: "Montagechef", name: S.proj.vonName, tel: S.proj.vonTel, mail: "" }); S.step = 0; save(); draw(); window.scrollTo({ top: 0 }); };
+    b.onclick = () => { if (S.variant && S.variant !== n) { S.items = {}; } S.variant = n; S.choose = false; applyDefaults(n); ensureSelf(); S.step = 0; save(); draw(); window.scrollTo({ top: 0 }); };
     vs.appendChild(b);
   });
   const r = $("#btnReset"); if (r) r.onclick = () => { S = blank(); save(); draw(); };
   $("#goKontakte").onclick = () => { PAGE = "kontakte"; draw(); window.scrollTo({ top: 0 }); };
+  $("#prepIn").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { const v = JSON.parse(await f.text()); if (applyImport(v)) { IMPORT_NOTE = true; draw(); window.scrollTo({ top: 0 }); } } catch (err) {} e.target.value = ""; };
   $("#goProfil").onclick = () => { PAGE = "profil"; draw(); window.scrollTo({ top: 0 }); };
   drawArchive();
 }
@@ -831,7 +850,7 @@ function hasDraft() { return Object.keys(S.items).length || S.proj.name || S.pro
 const pf = (key, label, ph, type = "text", extra = "") => `<div class="field"><label for="p-${key}">${label}</label><input id="p-${key}" data-p="${key}" type="${type}" placeholder="${esc(ph)}" value="${esc(S.proj[key])}" ${extra}></div>`;
 function drawProject() {
   const p = S.proj;
-  let h = `<h2>Projekt</h2><p class="lead">Kopfdaten des Protokolls, wie im MoreApp-Formular. Geschäftsstelle, Verfasser und Ort merkt sich die App.</p>
+  let h = (IMPORT_NOTE ? `<div class="notice good">Vorbereitung geladen. Prüfe die Angaben und ergänze Fotos.</div>` : "") + `<h2>Projekt</h2><p class="lead">Kopfdaten des Protokolls, wie im MoreApp-Formular. Geschäftsstelle, Verfasser und Ort merkt sich die App.</p>`; IMPORT_NOTE = false; h += `
     <div class="card"><div class="eyebrow">Projektdetails</div><div class="fields">
       ${pf("name", "Projektname", "z. B. Wohnüberbauung Musterweg")}
       ${pf("komNr", "Kom Nr.", "z. B. 12345678", "text", 'inputmode="numeric"')}
@@ -899,8 +918,8 @@ function fieldHtml(k, it) {
 
 function drawSection(sec, idx, n) {
   const v = S.variant; const its = itemsFor(v, sec.id);
-  const intro = { org: "Was der Bauherr / die Verwaltung bereitstellt.", dem: "Rückbau, Mulde, Abdecken, Vorarbeiten im Schacht.", ele: "Steht teilweise auch im Dispoplan, geht aber gerne vergessen.", bau: "Wie Demonteur, ohne Demontage. Staubschleuse nicht vergessen.", sch: "Lastträger vor der Demontage, Aufmass, Blenden.", mal: "Ölanstrich Maschinenraum und Schachtgrube.", gip: "Zargen und alte Öffnungen.", schr: "Rammschutz und bauseitiger Kabinenboden.", hin: "Optional. Standardtexte, die du ans Ende des Protokolls stellen kannst." }[sec.id] || "";
-  let h = `<h2>${idx}. Besprechungsnotiz – ${esc(sec.name)}</h2><p class="lead">${esc(intro)}</p><div class="items">`;
+  const intro = { org: "Was der Bauherr / die Verwaltung bereitstellt.", asb: "Nur bei Schadstoffbefund. Spezialunternehmen, nicht Baumeister.", dem: "Rückbau, Mulde, Abdecken, Vorarbeiten im Schacht.", ele: "Steht teilweise auch im Dispoplan, geht aber gerne vergessen.", bau: "Wie Demonteur, ohne Demontage. Staubschleuse nicht vergessen.", sch: "Lastträger vor der Demontage, Aufmass, Blenden.", mal: "Ölanstrich Maschinenraum und Schachtgrube.", gip: "Zargen und alte Öffnungen.", schr: "Rammschutz und bauseitiger Kabinenboden.", hin: "Optional. Standardtexte, die du ans Ende des Protokolls stellen kannst." }[sec.id] || "";
+  let h = `<h2>${idx}. Besprechungsnotiz – ${esc(sec.name)}</h2><p class="lead">${esc(intro)} Alle Punkte sind standardmässig weggelassen; nimm auf, was es braucht.</p><div class="items">`;
   its.forEach(it => {
     const s = st(it.id); const state = itemState(it);
     h += `<div class="item ${s.mode === "out" ? "out" : ""} ${state === "open" ? "open-state" : ""} ${it.star ? "star" : ""}" data-id="${it.id}">
@@ -1065,6 +1084,7 @@ function buildPdf(blocks) {
   const footer = () => {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(0);
     doc.text(footerLeft, L, 287);
+    doc.setTextColor(150); doc.setFontSize(7); doc.text(`Bausitzung Baukasten v${APP_VERSION}`, (L + R) / 2, 287, { align: "center" }); doc.setTextColor(0);
     doc.text(`Seite ${page} von {tot}`, R, 287, { align: "right" });
   };
   const newPage = () => { footer(); doc.addPage(); page++; header(); };
@@ -1177,7 +1197,23 @@ function copy(text, btn) {
 $("#btnPrev").onclick = () => { if (S.step === 0) { S.choose = true; save(); draw(); window.scrollTo({ top: 0 }); } else go(S.step - 1); };
 $("#btnNext").onclick = () => go(S.step + 1);
 
-(() => { let pid = null; try { pid = localStorage.getItem(CUR_KEY) || sessionStorage.getItem(CUR_KEY); } catch (e) {} const p = PROFILES.find(x => x.id === pid); if (p && authed) { CUR = p; loadState(p.id); } })();
+// ------------------------------------------------ Vorbereitung importieren (Link oder Datei)
+function b64uDecode(str) { const b = str.replace(/-/g, "+").replace(/_/g, "/"); const bin = atob(b + "=".repeat((4 - b.length % 4) % 4)); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+let PENDING_IMPORT = null;
+try { const m = /[#&]import=([^&]+)/.exec(location.hash); if (m) { PENDING_IMPORT = JSON.parse(b64uDecode(m[1])); history.replaceState(null, "", location.pathname + location.search); } } catch (e) { PENDING_IMPORT = null; }
+function applyImport(v) {
+  const d = v.vorbereitung || v;
+  if (!d || !VARIANTS[d.variant]) return false;
+  const n = blank(); n.variant = d.variant; n.choose = false; n.step = 0;
+  n.proj = Object.assign(blankProj(), d.proj || {}); if (!n.proj.datum) n.proj.datum = today();
+  Object.entries(d.items || {}).forEach(([k, val]) => { n.items[k] = { mode: val.mode || "in", opt: val.opt || null }; });
+  Object.assign(n.fields, d.fields || {}); n.custom = d.custom || {}; n.teiln = (d.teiln || []).map(t => ({ fn: t.fn || "", name: t.name || "", tel: t.tel || "", mail: t.mail || "" }));
+  if (Array.isArray(d.doors) && d.doors.length) n.doors = d.doors.map(x => Object.assign(blankDoor(), x));
+  S = n; applyDefaults(S.variant); ensureSelf(); save(); return true;
+}
+function tryPendingImport() { if (PENDING_IMPORT && CUR) { const ok = applyImport(PENDING_IMPORT); PENDING_IMPORT = null; if (ok) { IMPORT_NOTE = true; } } }
+let IMPORT_NOTE = false;
+(() => { let pid = null; try { pid = localStorage.getItem(CUR_KEY) || sessionStorage.getItem(CUR_KEY); } catch (e) {} const p = PROFILES.find(x => x.id === pid); if (p && authed) { CUR = p; loadState(p.id); tryPendingImport(); } })();
 draw();
 </script>
 </body></html>
