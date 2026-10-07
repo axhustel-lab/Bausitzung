@@ -119,6 +119,30 @@
   .doors { display: grid; gap: 8px; }
   .door { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; }
   details.texts { margin-top: 18px; }
+  .gate { max-width: 420px; margin: 48px auto 0; display: grid; gap: 14px; }
+  .gate .card { gap: 12px; }
+  .gate h2 { margin: 0; }
+  .gate input[type=password] { width: 100%; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); font-size: 16px; }
+  .gate label.chk { display: flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--muted); }
+  .arch { display: grid; gap: 8px; margin-top: 10px; }
+  .arow { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 6px; }
+  .arow .t { font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .arow .m { font-size: 12.5px; color: var(--muted); }
+  .arow .b { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted); }
+  .tag.fertig { background: var(--good-soft); color: var(--good); }
+  .tag.vorlage { background: var(--accent-soft); color: var(--accent); }
+  .plist { display: grid; gap: 8px; }
+  .prow { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 12px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .prow .n { font-weight: 600; } .prow .n small { display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; }
+  .picker { border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); padding: 8px; display: grid; gap: 6px; grid-column: 1 / -1; }
+  .picker input[type=search] { width: 100%; padding: 7px 9px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); }
+  .pick { text-align: left; border: 1px solid var(--line); background: var(--surface-2); border-radius: 7px; padding: 7px 10px; cursor: pointer; font-size: 13.5px; }
+  .pick:hover { border-color: var(--ink); }
+  .pick small { color: var(--muted); display: block; font-size: 12px; }
+  .crow { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; align-items: end; }
+  @media (max-width: 460px) { .crow { grid-template-columns: 1fr; } }
+  .crow .b { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
   details.texts summary { cursor: pointer; font-weight: 600; padding: 8px 0; color: var(--muted); }
 
   /* Buttons */
@@ -254,12 +278,11 @@ const F = {
   provDatum: { l: "Bereit am", t: "date" },
   freiDatum: { l: "Freischalten am", t: "date" },
   freiZeit: { l: "ca. Uhrzeit", t: "time", d: "09:00" },
-  absich: { l: "Absicherung", t: "select", o: ["3x 16 A", "3x 25 A", "3x 32 A"] },
-  absichKraft: { l: "Absicherung Kraft Lift", t: "select", o: ["3x 16 A", "3x 20 A", "3x 25 A", "3x 32 A"] },
-  absichLicht: { l: "Absicherung Licht Lift", t: "select", o: ["1x 10 A", "1x 13 A", "1x 16 A"] },
+  absichKraft: { l: "Absicherung Kraft Lift (5-Leiter 3L+N+PE, 400 V)", t: "select", o: ["3x 10 A LS", "3x 13 A LS", "3x 16 A LS", "3x 20 A LS", "3x 25 A LS", "3x 32 A LS", "3x 40 A LS"] },
+  absichLicht: { l: "Absicherung Licht Lift (3-Leiter L+N+PE, 230 V)", t: "select", o: ["1x 10 A FI/LS 30 mA", "1x 13 A FI/LS 30 mA", "1x 16 A FI/LS 30 mA"] },
   fuenfLeiter: { l: "5-Leiter mit Neutralleiter", t: "select", o: ["vorhanden", "nicht vorhanden – durch Elektriker zu erstellen", "durch Elektriker zu prüfen"] },
   lanBis: { l: "LAN bereit bis", t: "date" },
-  absichHyd: { l: "Absicherung", t: "select", o: ["3x 25 A träge", "3x 32 A träge", "3x 40 A träge"] },
+  absichHyd: { l: "Absicherung Kraft Lift Hydraulik (5-Leiter, 400 V)", t: "select", o: ["3x 20 A LS C", "3x 25 A LS C", "3x 32 A LS C", "3x 40 A LS C", "3x 50 A LS C", "3x 25 A LS D", "3x 32 A LS D", "3x 40 A LS D"] },
   anlaufA: { l: "Anlaufstrom (A)", t: "number", ph: "x" },
   zulMm2: { l: "Zuleitung min. (mm²)", t: "number", ph: "x" },
   zulStatus: { l: "Zuleitung", t: "select", o: ["bleibt", "wird ersetzt"] },
@@ -381,9 +404,9 @@ const ITEMS = [
   { id: "prov", s: "ele", v: [1,2,3], l: "Bauprovisorium 16 A CEE", tpl: "Bauprovisorium mit 1x 16 A CEE-Stecker bei {provOrt} bereitstellen, vor Demontage am {provDatum} 07:00 Uhr.", f: ["provOrt","provDatum"] },
   { id: "frei", s: "ele", v: [1,2,3], l: "Strom trennen – Datum, Uhrzeit", tpl: "Aufzug freischalten: Lift und Schachtbeleuchtung stromlos machen und alte Zuleitungen abhängen, nach Rücksprache mit dem {_demPartner}, bei Demontage am {freiDatum} um ca. {freiZeit} Uhr.", f: ["freiDatum","freiZeit"] },
   { id: "fuenf", s: "ele", v: [1,2,3], l: "Kontrolle: 5-Leiter mit Neutralleiter?", tpl: "Kontrolle Zuleitung: 5-Leiter-Zuleitung mit Neutralleiter {fuenfLeiter}.", f: ["fuenfLeiter"] },
-  { id: "zul1", s: "ele", v: [1], l: "Zuleitung / Sicherungen Kraft + Licht", tpl: "Zuleitung und Absicherung für die neue Anlage prüfen/vorbereiten: Kraft Lift {absichKraft}, Licht Lift {absichLicht}, je separater Stromkreis. Fertig bis {eleBis}.", f: ["absichKraft","absichLicht","eleBis"] },
-  { id: "zul2", s: "ele", v: [2], l: "Zuleitung / Sicherungen prüfen", tpl: "Bestehende Zuleitung und Absicherung prüfen: {absich} nötig, separater Stromkreis. Zuleitung {zulStatus} bis {eleBis}.", f: ["absich","zulStatus","eleBis"] },
-  { id: "zul3", s: "ele", v: [3], l: "Zuleitung / Anlaufstrom Hydraulik", tpl: "Zuleitung und Absicherung prüfen: Anlaufstrom Hydraulikmotor {anlaufA} A, Absicherung {absichHyd}, Zuleitung min. {zulMm2} mm². Zuleitung {zulStatus} bis {eleBis}.", f: ["anlaufA","absichHyd","zulMm2","zulStatus","eleBis"] },
+  { id: "zul1", s: "ele", v: [1], l: "Zuleitung / Sicherungen Kraft + Licht", tpl: "Zuleitung und Absicherung für die neue Anlage prüfen/vorbereiten: Kraft Lift 5-Leiter (3L+N+PE, 400 V) mit {absichKraft}, Licht Lift 3-Leiter (L+N+PE, 230 V) mit {absichLicht}, je separater Stromkreis ab Hauptverteilung. Fertig bis {eleBis}.", f: ["absichKraft","absichLicht","eleBis"] },
+  { id: "zul2", s: "ele", v: [2], l: "Zuleitung / Sicherungen prüfen", tpl: "Bestehende Zuleitung und Absicherung prüfen: Kraft Lift 5-Leiter (3L+N+PE, 400 V) mit {absichKraft}, Licht Lift 3-Leiter (L+N+PE, 230 V) mit {absichLicht}, je separater Stromkreis. Zuleitung {zulStatus} bis {eleBis}.", f: ["absichKraft","absichLicht","zulStatus","eleBis"] },
+  { id: "zul3", s: "ele", v: [3], l: "Zuleitung / Anlaufstrom Hydraulik", tpl: "Zuleitung und Absicherung prüfen: Kraft Lift 5-Leiter (3L+N+PE, 400 V) mit {absichHyd} (Anlaufstrom Hydraulikmotor {anlaufA} A, Zuleitung min. {zulMm2} mm²), Licht Lift 3-Leiter (L+N+PE, 230 V) mit {absichLicht}, je separater Stromkreis. Zuleitung {zulStatus} bis {eleBis}.", f: ["absichHyd","anlaufA","zulMm2","absichLicht","zulStatus","eleBis"] },
   { id: "hs", s: "ele", v: [2,3], l: "Hauptschalter abschliessbar", tpl: "Abschliessbarer Hauptschalter im Maschinenraum neben der Türe (falls nicht vorhanden) erstellen." },
   { id: "ss", s: "ele", v: [2,3], l: "Standort Steuerschrank", tpl: "Neuer Standort Steuerschrank: {ssOrt}. Zuleitung bis dorthin verlängern.", f: ["ssOrt"] },
   { id: "erdinfo", s: "ele", v: [1,2,3], l: "Infoblatt Potentialausgleich mitschicken", attach: "erd", tpl: "Potentialausgleich/Erdung gemäss Infoblatt «Info Potentialausgleich» von AS Aufzüge AG (separates PDF im Anhang) ausführen.", hint: "Wenn aufgenommen, wird das Infoblatt als zweites PDF mitgeschickt" },
@@ -459,23 +482,69 @@ const ITEMS = [
   { id: "h3", s: "hin", v: [1,2,3], l: "Zusatzleistungen nur schriftlich", tpl: "Zusatzleistungen von AS Aufzüge AG werden nur nach schriftlicher Bestätigung ausgeführt und separat verrechnet." },
 ];
 
+// ============================================================ Zugang
+const GATE_HASH = "055684d31053b3769183c71c1aec732af707b3659f5d53094dd0525f3bdd463c"; // SHA-256 des Zugangscodes
+const AUTH_KEY = "bausitzung-baukasten-auth";
+async function sha256(str) {
+  const data = new TextEncoder().encode(str);
+  if (crypto && crypto.subtle) { const buf = await crypto.subtle.digest("SHA-256", data); return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join(""); }
+  return sha256js(data);
+}
+function sha256js(bytes) { // Fallback ohne WebCrypto (z. B. http statt https)
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l = bytes.length, padLen = (((l + 9) + 63) >> 6) << 6, m = new Uint8Array(padLen); m.set(bytes); m[l] = 0x80;
+  const dv = new DataView(m.buffer); dv.setUint32(padLen - 4, (l * 8) >>> 0); dv.setUint32(padLen - 8, Math.floor(l * 8 / 4294967296));
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n)); const w = new Uint32Array(64);
+  for (let i = 0; i < padLen; i += 64) {
+    for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
+    for (let t = 16; t < 64; t++) { const s0 = rotr(w[t-15],7) ^ rotr(w[t-15],18) ^ (w[t-15] >>> 3), s1 = rotr(w[t-2],17) ^ rotr(w[t-2],19) ^ (w[t-2] >>> 10); w[t] = (w[t-16] + s0 + w[t-7] + s1) >>> 0; }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let t = 0; t < 64; t++) { const S1 = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25), ch = (e & f) ^ (~e & g), t1 = (h + S1 + ch + K[t] + w[t]) >>> 0, S0 = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22), maj = (a & b) ^ (a & c) ^ (b & c), t2 = (S0 + maj) >>> 0; h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0; }
+    H = [a,b,c,d,e,f,g,h].map((v, i) => (H[i] + v) >>> 0);
+  }
+  return H.map(v => v.toString(16).padStart(8, "0")).join("");
+}
+let authed = false; try { authed = localStorage.getItem(AUTH_KEY) === GATE_HASH || sessionStorage.getItem(AUTH_KEY) === GATE_HASH; } catch (e) {}
+function logout() { CUR = null; try { localStorage.removeItem(CUR_KEY); sessionStorage.removeItem(CUR_KEY); } catch (e) {} S = blank(); draw(); }
+
+// ============================================================ Archiv (IndexedDB, nur auf diesem Gerät)
+const DB_NAME = "bausitzung-baukasten", DB_STORE = "protokolle";
+function dbOpen() { return new Promise((res, rej) => { const r = indexedDB.open(DB_NAME, 1); r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE, { keyPath: "id" }); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function dbAll() { try { const db = await dbOpen(); return await new Promise((res, rej) => { const tx = db.transaction(DB_STORE, "readonly"); const q = tx.objectStore(DB_STORE).getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); }); } catch (e) { return []; } }
+async function dbPut(rec) { const db = await dbOpen(); return new Promise((res, rej) => { const tx = db.transaction(DB_STORE, "readwrite"); tx.objectStore(DB_STORE).put(rec); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
+async function dbDel(id) { const db = await dbOpen(); return new Promise((res, rej) => { const tx = db.transaction(DB_STORE, "readwrite"); tx.objectStore(DB_STORE).delete(id); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
 // ============================================================ Zustand
-const KEY = "bausitzung-baukasten-v2";
-const KEEP_KEY = "bausitzung-baukasten-keep";
-let KEEP = {}; try { KEEP = JSON.parse(localStorage.getItem(KEEP_KEY) || "{}"); } catch (e) {}
+const PROFILES_KEY = "bausitzung-profiles", CONTACTS_KEY = "bausitzung-contacts", CUR_KEY = "bausitzung-current";
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+let PROFILES = lsGet(PROFILES_KEY, []); let CONTACTS = lsGet(CONTACTS_KEY, []);
+const saveProfiles = () => lsSet(PROFILES_KEY, PROFILES); const saveContacts = () => lsSet(CONTACTS_KEY, CONTACTS);
+let CUR = null; // aktives Profil
+let KEY = "bausitzung-baukasten-v2", KEEP_KEY = "bausitzung-baukasten-keep", KEEP = {};
+const LEGACY_KEEP = lsGet("bausitzung-baukasten-keep", {});
+function loadState(pid) {
+  KEY = `bausitzung-baukasten-v2:${pid}`; KEEP_KEY = `bausitzung-baukasten-keep:${pid}`; KEEP = lsGet(KEEP_KEY, {});
+  if (!KEEP.fields && LEGACY_KEEP.fields) { KEEP.fields = LEGACY_KEEP.fields; }
+  S = blank();
+  try { let raw = localStorage.getItem(KEY); if (!raw && localStorage.getItem("bausitzung-baukasten-v2")) { raw = localStorage.getItem("bausitzung-baukasten-v2"); localStorage.removeItem("bausitzung-baukasten-v2"); } if (raw) { const o = JSON.parse(raw); S = Object.assign(blank(), o); S.proj = Object.assign(blankProj(), o.proj || {}); if (!S.doors || !S.doors.length) S.doors = [blankDoor()]; } } catch (e) {}
+  if (S.variant) applyDefaults(S.variant);
+}
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const FUNKTIONEN = ["Montagechef", "Bauleiter", "Bauherr", "Verwaltung", "Hauswart", "Architekt", "Demonteur", "Elektriker", "Baumeister", "Schlosser", "Maler", "Gipser", "Verkäufer AS", "Projektleiter AS", "Monteur", "Andere"];
-const blankProj = () => ({ name: "", komNr: "", typ: "", strasse: "", plzOrt: "", datum: today(), ort: KEEP.ort || "Chur", gs: KEEP.gs || "AS-OS", vonName: KEEP.vonName || "", vonPos: KEEP.vonPos || "Installation Supervisor", vonTel: KEEP.vonTel || "" });
+const blankProj = () => ({ name: "", komNr: "", typ: "", strasse: "", plzOrt: "", datum: today(), ort: (CUR && CUR.ort) || "Chur", gs: (CUR && CUR.gs) || "AS-OS", vonName: (CUR && CUR.name) || "", vonPos: (CUR && CUR.pos) || "Installation Supervisor", vonTel: (CUR && CUR.tel) || "", vonMail: (CUR && CUR.mail) || "" });
 const blankDoor = () => ({ bez: "", mat: "Chromstahl", ral: "", schw: "kein Schwellenblech" });
-const blank = () => ({ variant: null, choose: true, step: 0, doors: [blankDoor()], items: {}, fields: Object.assign({}, KEEP.fields || {}, KEEP.tresorCode ? { tresorCode: KEEP.tresorCode } : {}), custom: {}, photos: {}, proj: blankProj(), teiln: [], sign: KEEP.sign || "" });
+const blank = () => ({ variant: null, choose: true, step: 0, archiveId: null, doors: [blankDoor()], items: {}, fields: Object.assign({}, KEEP.fields || {}, LEGACY_KEEP.tresorCode ? { tresorCode: LEGACY_KEEP.tresorCode } : {}), custom: {}, photos: {}, proj: blankProj(), teiln: [], sign: (CUR && CUR.sign) || "" });
 let S = blank();
-try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); S = Object.assign(blank(), o); S.proj = Object.assign(blankProj(), o.proj || {}); if (!S.doors || !S.doors.length) S.doors = [blankDoor()]; } } catch (e) {}
 let storageFull = false;
 function save() {
   try {
     const keepFields = {}; Object.keys(F).filter(k => F[k].keep).forEach(k => { if (S.fields[k]) keepFields[k] = S.fields[k]; });
-    KEEP = Object.assign(KEEP, { fields: keepFields, ort: S.proj.ort, gs: S.proj.gs, vonName: S.proj.vonName, vonPos: S.proj.vonPos, vonTel: S.proj.vonTel, sign: S.sign });
+    KEEP = Object.assign(KEEP, { fields: keepFields });
     localStorage.setItem(KEEP_KEY, JSON.stringify(KEEP));
+    if (CUR && CUR.sign !== S.sign) { CUR.sign = S.sign; saveProfiles(); }
     localStorage.setItem(KEY, JSON.stringify(S)); storageFull = false;
   } catch (e) { storageFull = true; }
 }
@@ -530,12 +599,17 @@ function applyDefaults(v) {
 const $ = (sel) => document.querySelector(sel);
 const view = $("#view"), stepsEl = $("#steps"), metaEl = $("#meta"), bar = $("#bar");
 // Schritte: 0 = Projekt & Teilnehmer, 1..n = Betreffe, n+1 = Protokoll
+let PAGE = null; // "kontakte" | "profil"
 const steps = () => { const secs = S.variant ? secsFor(S.variant) : []; return [{ id: "proj", name: "Projekt" }, ...secs, { id: "pdf", name: "Protokoll" }]; };
 
 function draw() {
   const v = S.variant;
   const sts = steps(); const secs = sts.slice(1, -1);
-  metaEl.innerHTML = v ? `<span class="chip">${VARIANTS[v].k} ${esc(VARIANTS[v].name)}</span>${S.proj.komNr ? `<span>Kom ${esc(S.proj.komNr)}</span>` : ""}` : "";
+  if (!authed) { metaEl.innerHTML = ""; stepsEl.innerHTML = ""; bar.hidden = true; drawGate(); return; }
+  if (!CUR) { metaEl.innerHTML = ""; stepsEl.innerHTML = ""; bar.hidden = true; drawProfiles(); return; }
+  if (PAGE) { metaEl.innerHTML = `<button type="button" class="btn small" id="btnBack">Zurück</button>`; $("#btnBack").onclick = () => { PAGE = null; draw(); }; stepsEl.innerHTML = ""; bar.hidden = true; if (PAGE === "kontakte") drawContacts(); else drawProfileEdit(); return; }
+  metaEl.innerHTML = (v && !S.choose ? `<span class="chip">${VARIANTS[v].k} ${esc(VARIANTS[v].name)}</span>` : `<span class="chip" title="Profil">${esc(CUR.name.split(" ")[0] || "Profil")}</span>`) + `<button type="button" class="btn small ghost" id="btnLogout">Abmelden</button>`;
+  $("#btnLogout").onclick = logout;
   stepsEl.innerHTML = "";
   if (!v || S.choose) { drawStart(); bar.hidden = true; return; }
   if (S.step >= sts.length) S.step = sts.length - 1;
@@ -562,11 +636,136 @@ function draw() {
 function go(i) { S.step = i; save(); draw(); window.scrollTo({ top: 0 }); }
 function redraw() { const y = window.scrollY; draw(); window.scrollTo({ top: y }); }
 
+// ------------------------------------------------ Zugangscode
+function drawGate() {
+  view.innerHTML = `<div class="gate"><div class="card">
+    <h2>Bausitzung Baukasten</h2>
+    <p class="lead" style="margin:0">Zugangscode eingeben. Den Code bekommst du vom Montagechef.</p>
+    <form id="gateForm"><div class="field"><label for="gateCode">Zugangscode</label><input id="gateCode" type="password" autocomplete="current-password" autofocus></div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="gateKeep" checked> Auf diesem Gerät angemeldet bleiben</label>
+    <div class="rowbtns" style="margin:12px 0 0"><button type="submit" class="btn primary">Anmelden</button></div><div id="gateMsg"></div></form>
+    <p class="hint">Alle Eingaben bleiben nur auf diesem Gerät gespeichert.</p></div></div>`;
+  $("#gateForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const code = $("#gateCode").value.trim(); if (!code) return;
+    const h = await sha256(code);
+    if (h === GATE_HASH) { authed = true; try { (($("#gateKeep").checked) ? localStorage : sessionStorage).setItem(AUTH_KEY, GATE_HASH); } catch (err) {} draw(); }
+    else { $("#gateMsg").innerHTML = `<div class="notice warn" style="margin-top:10px">Code falsch.</div>`; $("#gateCode").value = ""; $("#gateCode").focus(); }
+  };
+}
+
+// ------------------------------------------------ Profile (lokal auf diesem Gerät)
+const profileForm = (p, isNew) => `<div class="fields">
+    <div class="field"><label>Vorname Name</label><input data-pf="name" placeholder="Vorname Name" value="${esc(p.name || "")}"></div>
+    <div class="field"><label>Funktion</label><input data-pf="pos" placeholder="Installation Supervisor" value="${esc(p.pos || "Installation Supervisor")}"></div>
+    <div class="field"><label>Telefon (Mobile)</label><input data-pf="tel" type="tel" placeholder="079 …" value="${esc(p.tel || "")}"></div>
+    <div class="field"><label>E-Mail</label><input data-pf="mail" type="email" placeholder="vorname.name@as-aufzuege.ch" value="${esc(p.mail || "")}"></div>
+    <div class="field"><label>Geschäftsstelle</label><input data-pf="gs" value="${esc(p.gs || "AS-OS")}"></div>
+    <div class="field"><label>Ort (Erstellung)</label><input data-pf="ort" value="${esc(p.ort || "Chur")}"></div>
+    <div class="field"><label>${isNew ? "PIN (min. 4 Zeichen)" : "Neue PIN (leer = unverändert)"}</label><input data-pf="pin" type="password" inputmode="numeric" autocomplete="new-password"></div>
+    <div class="field"><label>PIN wiederholen</label><input data-pf="pin2" type="password" inputmode="numeric" autocomplete="new-password"></div>
+  </div>`;
+function readProfileForm(root) { const o = {}; root.querySelectorAll("[data-pf]").forEach(i => o[i.dataset.pf] = i.value.trim()); return o; }
+async function loginProfile(p, keep) { CUR = p; try { (keep ? localStorage : sessionStorage).setItem(CUR_KEY, p.id); } catch (e) {} loadState(p.id); draw(); window.scrollTo({ top: 0 }); }
+function drawProfiles() {
+  const legacyName = LEGACY_KEEP.vonName || "";
+  view.innerHTML = `<div class="gate"><div class="card">
+    <h2>Wer bist du?</h2>
+    ${PROFILES.length ? `<div class="plist">${PROFILES.map(p => `<div class="prow"><div class="n">${esc(p.name)}<small>${esc(p.pos || "")}</small></div><button type="button" class="btn small primary" data-login="${p.id}">Anmelden</button></div>`).join("")}</div>
+    <div id="pinBox"></div>` : `<p class="lead" style="margin:0">Noch kein Profil auf diesem Gerät. Lege dein Profil an; Name, Funktion und Telefon werden dann in jedes Protokoll übernommen.</p>`}
+    <details ${PROFILES.length ? "" : "open"}><summary class="hint" style="cursor:pointer">${PROFILES.length ? "Neues Profil anlegen" : "Profil anlegen"}</summary>
+      <div id="newProf" style="margin-top:10px">${profileForm({ name: legacyName, pos: LEGACY_KEEP.vonPos, tel: LEGACY_KEEP.vonTel, gs: LEGACY_KEEP.gs, ort: LEGACY_KEEP.ort }, true)}
+      <label class="chk" style="margin-top:8px"><input type="checkbox" id="npKeep" checked> Auf diesem Gerät angemeldet bleiben</label>
+      <div class="rowbtns" style="margin:10px 0 0"><button type="button" class="btn primary" id="npSave">Profil anlegen und anmelden</button></div><div id="npMsg"></div></div></details>
+    <p class="hint">Profile und PIN gelten nur für dieses Gerät. Auf einem anderen Handy legst du dein Profil einmal neu an.</p></div></div>`;
+  view.querySelectorAll("[data-login]").forEach(b => b.onclick = () => {
+    const p = PROFILES.find(x => x.id === b.dataset.login);
+    $("#pinBox").innerHTML = `<form id="pinForm" class="card" style="margin-top:8px"><div class="field"><label for="pinIn">PIN für ${esc(p.name)}</label><input id="pinIn" type="password" inputmode="numeric" autocomplete="current-password" autofocus></div>
+      <label class="chk"><input type="checkbox" id="pinKeep" checked> Auf diesem Gerät angemeldet bleiben</label>
+      <div class="rowbtns" style="margin:4px 0 0"><button type="submit" class="btn primary">Anmelden</button></div><div id="pinMsg"></div></form>`;
+    $("#pinIn").focus();
+    $("#pinForm").onsubmit = async (e) => { e.preventDefault(); const h = await sha256(p.id + ":" + $("#pinIn").value); if (h === p.pinHash) loginProfile(p, $("#pinKeep").checked); else { $("#pinMsg").innerHTML = `<div class="notice warn" style="margin-top:8px">PIN falsch.</div>`; $("#pinIn").value = ""; } };
+  });
+  $("#npSave").onclick = async () => {
+    const o = readProfileForm($("#newProf")); const msg = $("#npMsg");
+    if (!o.name) return msg.innerHTML = `<div class="notice warn" style="margin-top:8px">Name fehlt.</div>`;
+    if (o.pin.length < 4) return msg.innerHTML = `<div class="notice warn" style="margin-top:8px">PIN braucht mindestens 4 Zeichen.</div>`;
+    if (o.pin !== o.pin2) return msg.innerHTML = `<div class="notice warn" style="margin-top:8px">Die beiden PINs stimmen nicht überein.</div>`;
+    const id = uid(); const p = { id, name: o.name, pos: o.pos, tel: o.tel, mail: o.mail, gs: o.gs || "AS-OS", ort: o.ort || "Chur", pinHash: await sha256(id + ":" + o.pin), sign: PROFILES.length ? "" : (LEGACY_KEEP.sign || ""), created: new Date().toISOString() };
+    PROFILES.push(p); saveProfiles(); loginProfile(p, $("#npKeep").checked);
+  };
+}
+function drawProfileEdit() {
+  view.innerHTML = `<h2>Mein Profil</h2><p class="lead">Diese Angaben werden als Verfasser in jedes neue Protokoll übernommen.</p>
+    <div class="card" id="profEdit">${profileForm(CUR, false)}
+    <div class="rowbtns" style="margin:0"><button type="button" class="btn primary" id="pfSave">Speichern</button><button type="button" class="btn ghost" id="pfDel">Profil von diesem Gerät löschen</button></div><div id="pfMsg"></div></div>`;
+  $("#pfSave").onclick = async () => {
+    const o = readProfileForm($("#profEdit")); const msg = $("#pfMsg");
+    if (!o.name) return msg.innerHTML = `<div class="notice warn" style="margin-top:8px">Name fehlt.</div>`;
+    if (o.pin && o.pin.length < 4) return msg.innerHTML = `<div class="notice warn" style="margin-top:8px">PIN braucht mindestens 4 Zeichen.</div>`;
+    if (o.pin && o.pin !== o.pin2) return msg.innerHTML = `<div class="notice warn" style="margin-top:8px">Die beiden PINs stimmen nicht überein.</div>`;
+    Object.assign(CUR, { name: o.name, pos: o.pos, tel: o.tel, mail: o.mail, gs: o.gs || "AS-OS", ort: o.ort || "Chur" });
+    if (o.pin) CUR.pinHash = await sha256(CUR.id + ":" + o.pin);
+    saveProfiles();
+    if (S.choose) { S.proj = Object.assign(S.proj, { vonName: CUR.name, vonPos: CUR.pos, vonTel: CUR.tel, vonMail: CUR.mail, gs: CUR.gs, ort: CUR.ort }); save(); }
+    msg.innerHTML = `<div class="notice good" style="margin-top:8px">Profil gespeichert.</div>`;
+  };
+  $("#pfDel").onclick = () => { const b = $("#pfDel"); if (b.dataset.c) { PROFILES = PROFILES.filter(p => p.id !== CUR.id); saveProfiles(); try { localStorage.removeItem(KEY); localStorage.removeItem(KEEP_KEY); } catch (e) {} PAGE = null; logout(); } else { b.dataset.c = "1"; b.textContent = "Wirklich löschen? Entwurf und Profil gehen verloren (Archiv bleibt)."; b.classList.remove("ghost"); } };
+}
+
+// ------------------------------------------------ Kontakte (lokal auf diesem Gerät)
+const isMobileNr = (t) => /^07[5-9]/.test(String(t || "").replace(/[\s\-().]/g, "").replace(/^\+41/, "0").replace(/^0041/, "0"));
+function pickMobile(tels) { const list = tels.map(t => ({ n: t.n.trim(), cell: !!t.cell })).filter(t => t.n); return (list.find(t => isMobileNr(t.n)) || list.find(t => t.cell) || list[0] || { n: "" }).n; }
+function parseVcf(text) {
+  const out = []; const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const unf = []; for (const l of lines) { if ((l.startsWith(" ") || l.startsWith("\t")) && unf.length) unf[unf.length - 1] += l.slice(1); else unf.push(l); }
+  let c = null;
+  const dec = (v, params) => { let s = v; if (/ENCODING=QUOTED-PRINTABLE/i.test(params)) { try { s = decodeURIComponent(s.replace(/=\n/g, "").replace(/=([0-9A-F]{2})/gi, "%$1")); } catch (e) {} } return s.replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\n/gi, " ").trim(); };
+  for (const l of unf) {
+    if (/^BEGIN:VCARD/i.test(l)) { c = { fn: "", n: "", tels: [], mail: "", org: "" }; continue; }
+    if (/^END:VCARD/i.test(l)) { if (c) { const name = c.fn || c.n; if (name) out.push({ name, tel: pickMobile(c.tels), mail: c.mail, firma: c.org }); } c = null; continue; }
+    if (!c) continue;
+    const m = /^([^:;]+)((?:;[^:]*)?):(.*)$/.exec(l); if (!m) continue;
+    const key = m[1].toUpperCase().replace(/^ITEM\d+\./, ""), params = m[2] || "", val = m[3];
+    if (key === "FN") c.fn = dec(val, params);
+    else if (key === "N") { const parts = dec(val, params).split(";"); c.n = [parts[1], parts[0]].filter(Boolean).join(" "); }
+    else if (key === "TEL") c.tels.push({ n: dec(val, params).replace(/^tel:/i, ""), cell: /CELL|MOBILE|IPHONE/i.test(params) });
+    else if (key === "EMAIL" && !c.mail) c.mail = dec(val, params);
+    else if (key === "ORG") c.org = dec(val, params).split(";")[0];
+  }
+  return out;
+}
+async function pickFromPhone() {
+  if (!(navigator.contacts && navigator.contacts.select)) return null;
+  try { const res = await navigator.contacts.select(["name", "tel", "email"], { multiple: true }); return res.map(r => ({ name: (r.name || [])[0] || "", tel: pickMobile((r.tel || []).map(t => ({ n: t }))), mail: (r.email || [])[0] || "", firma: "" })); } catch (e) { return []; }
+}
+function addContacts(list, fn) { let n = 0; list.forEach(c => { if (!c.name) return; const ex = CONTACTS.find(x => x.name.toLowerCase() === c.name.toLowerCase()); if (ex) { if (c.tel && !ex.tel) ex.tel = c.tel; if (c.mail && !ex.mail) ex.mail = c.mail; if (fn && !ex.fn) ex.fn = fn; } else { CONTACTS.push({ id: uid(), fn: fn || c.fn || "", name: c.name, tel: c.tel || "", mail: c.mail || "", firma: c.firma || "" }); n++; } }); saveContacts(); return n; }
+function drawContacts() {
+  const groups = {}; CONTACTS.slice().sort((a, b) => (a.fn || "zz").localeCompare(b.fn || "zz") || a.name.localeCompare(b.name)).forEach(c => (groups[c.fn || "Ohne Funktion"] = groups[c.fn || "Ohne Funktion"] || []).push(c));
+  const fnSel = (v) => `<select data-c="fn"><option value="">– Funktion –</option>${FUNKTIONEN.map(f => `<option ${v === f ? "selected" : ""}>${f}</option>`).join("")}</select>`;
+  view.innerHTML = `<h2>Kontakte</h2><p class="lead">Gespeicherte Handwerker und Ansprechpersonen. Bei den Teilnehmern wählst du sie mit einem Klick; die Funktion filtert die Liste.</p>
+    <div class="card"><div class="eyebrow">Kontakte hinzufügen</div>
+      <div class="rowbtns" style="margin:0">${navigator.contacts && navigator.contacts.select ? `<button type="button" class="btn" id="cPhone">Vom Handy wählen</button>` : ""}<label class="btn" for="cVcf">vCard-Datei (.vcf) importieren</label><input id="cVcf" type="file" accept=".vcf,text/vcard,text/x-vcard" multiple hidden></div>
+      <div class="field" style="margin-top:6px"><label>Funktion für die importierten Kontakte (optional)</label>${fnSel("").replace('data-c="fn"', 'id="cImpFn"')}</div>
+      <div id="cMsg"></div>
+      <div class="eyebrow" style="margin-top:6px">Von Hand</div>
+      <div class="crow" id="cNew"><div class="field"><label>Funktion</label>${fnSel("")}</div><div class="field"><label>Name</label><input data-c="name" placeholder="Vorname Name"></div><div class="field"><label>Telefon (Mobile)</label><input data-c="tel" type="tel" placeholder="079 …"></div><div class="field"><label>E-Mail</label><input data-c="mail" type="email"></div><div class="field"><label>Firma</label><input data-c="firma"></div><div class="b"><button type="button" class="btn small primary" id="cAdd">Kontakt speichern</button></div></div>
+    </div>
+    ${Object.keys(groups).map(g => `<h2 style="font-size:16px;margin-top:18px">${esc(g)} <small style="color:var(--muted);font-weight:400">${groups[g].length}</small></h2><div class="teiln">${groups[g].map(c => `<div class="crow" data-cid="${c.id}"><div class="field"><label>Funktion</label>${fnSel(c.fn)}</div><div class="field"><label>Name</label><input data-c="name" value="${esc(c.name)}"></div><div class="field"><label>Telefon</label><input data-c="tel" type="tel" value="${esc(c.tel)}"></div><div class="field"><label>E-Mail</label><input data-c="mail" type="email" value="${esc(c.mail)}"></div><div class="field"><label>Firma</label><input data-c="firma" value="${esc(c.firma || "")}"></div><div class="b"><button type="button" class="btn small ghost" data-cdel="${c.id}">Löschen</button></div></div>`).join("")}</div>`).join("") || `<div class="notice warn">Noch keine Kontakte gespeichert.</div>`}`;
+  const readRow = (row) => { const o = {}; row.querySelectorAll("[data-c]").forEach(i => o[i.dataset.c] = i.value.trim()); return o; };
+  $("#cAdd").onclick = () => { const o = readRow($("#cNew")); if (!o.name) return; CONTACTS.push({ id: uid(), fn: o.fn, name: o.name, tel: o.tel, mail: o.mail, firma: o.firma }); saveContacts(); draw(); };
+  view.querySelectorAll("[data-cid]").forEach(row => { const c = CONTACTS.find(x => x.id === row.dataset.cid); row.querySelectorAll("[data-c]").forEach(i => { const upd = () => { c[i.dataset.c] = i.value.trim(); saveContacts(); }; i.oninput = upd; i.onchange = upd; }); });
+  view.querySelectorAll("[data-cdel]").forEach(b => b.onclick = () => { if (b.dataset.c) { CONTACTS = CONTACTS.filter(x => x.id !== b.dataset.cdel); saveContacts(); draw(); } else { b.dataset.c = "1"; b.textContent = "Wirklich löschen?"; b.classList.remove("ghost"); } });
+  $("#cVcf").onchange = async (e) => { let all = []; for (const f of [...e.target.files]) { try { all = all.concat(parseVcf(await f.text())); } catch (err) {} } const n = addContacts(all, $("#cImpFn").value); $("#cMsg").innerHTML = `<div class="notice good" style="margin-top:8px">${all.length} Kontakt${all.length === 1 ? "" : "e"} gelesen, ${n} neu gespeichert.</div>`; setTimeout(draw, 900); };
+  const cp = $("#cPhone"); if (cp) cp.onclick = async () => { const list = await pickFromPhone(); if (!list) return; const n = addContacts(list, $("#cImpFn").value); $("#cMsg").innerHTML = `<div class="notice good" style="margin-top:8px">${list.length} ausgewählt, ${n} neu gespeichert.</div>`; setTimeout(draw, 900); };
+}
+
 // ------------------------------------------------ Start: Variante
 function drawStart() {
   view.innerHTML = `
     <h2>Welche Anlage?</h2>
-    <p class="lead">Wähle die Variante. Danach erfasst du Projekt und Teilnehmer, gehst die Bausitzung Betreff für Betreff durch und erstellst am Schluss das Protokoll als PDF.</p>
+    <p class="lead">Wähle die Variante für ein neues Protokoll. Gespeicherte Protokolle und Vorlagen findest du weiter unten im Archiv.</p>
+    <div class="rowbtns" style="margin:0 0 14px"><button type="button" class="btn small" id="goKontakte">Kontakte</button><button type="button" class="btn small" id="goProfil">Mein Profil</button></div>
     <div class="variants" id="variants"></div>
     ${hasDraft() ? `<div class="notice warn" style="margin-top:16px">Es gibt einen angefangenen Entwurf${S.proj.komNr ? " (Kom " + esc(S.proj.komNr) + ")" : ""}. Die gleiche Variante wählen führt ihn weiter; <button class="btn small" id="btnReset" type="button">Neu beginnen</button> löscht alle Eingaben.</div>` : ""}
   `;
@@ -578,6 +777,53 @@ function drawStart() {
     vs.appendChild(b);
   });
   const r = $("#btnReset"); if (r) r.onclick = () => { S = blank(); save(); draw(); };
+  $("#goKontakte").onclick = () => { PAGE = "kontakte"; draw(); window.scrollTo({ top: 0 }); };
+  $("#goProfil").onclick = () => { PAGE = "profil"; draw(); window.scrollTo({ top: 0 }); };
+  drawArchive();
+}
+async function drawArchive() {
+  const recs = (await dbAll()).filter(r => !r.pid || r.pid === CUR.id).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""));
+  const el = document.createElement("div");
+  el.innerHTML = `<h2 style="font-size:17px;margin-top:28px">Archiv auf diesem Gerät</h2>
+    <p class="lead">Gespeicherte Protokolle und Vorlagen. Sie liegen nur in diesem Browser; mit «Sichern» exportierst du alles als Datei.</p>
+    <div class="rowbtns" style="margin:0 0 10px"><button type="button" class="btn small" id="archExport">Archiv sichern (Datei)</button><label class="btn small" for="archImport">Archiv laden (Datei)</label><input id="archImport" type="file" accept="application/json,.json" hidden></div>
+    <div class="arch">${recs.length ? recs.map(r => `<div class="arow" data-id="${r.id}">
+      <div class="t"><span class="tag ${r.status}">${r.status === "vorlage" ? "Vorlage" : "Protokoll"}</span>${esc(r.titel || "ohne Namen")}${r.komNr ? ` · Kom ${esc(r.komNr)}` : ""}</div>
+      <div class="m">${VARIANTS[r.variant] ? VARIANTS[r.variant].k + " " + esc(VARIANTS[r.variant].name) + " · " : ""}gespeichert ${esc(fmtDate((r.savedAt || "").slice(0, 10)))}${r.photos ? ` · ${r.photos} Foto${r.photos === 1 ? "" : "s"}` : ""}</div>
+      <div class="b"><button type="button" class="btn small" data-open="${r.id}">${r.status === "vorlage" ? "Neues Protokoll aus Vorlage" : "Öffnen"}</button>${r.status !== "vorlage" ? `<button type="button" class="btn small" data-tpl="${r.id}">Als Vorlage verwenden</button>` : ""}<button type="button" class="btn small ghost" data-adel="${r.id}">Löschen</button></div>
+    </div>`).join("") : `<div class="notice warn">Noch nichts gespeichert. Auf der Seite «Protokoll» kannst du ein fertiges Protokoll oder eine Vorlage speichern.</div>`}</div>`;
+  view.appendChild(el);
+  el.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { const r = recs.find(x => x.id === b.dataset.open); loadRecord(r, r.status === "vorlage"); });
+  el.querySelectorAll("[data-tpl]").forEach(b => b.onclick = () => { const r = recs.find(x => x.id === b.dataset.tpl); loadRecord(r, true); });
+  el.querySelectorAll("[data-adel]").forEach(b => b.onclick = async () => { const row = b.closest(".arow"); if (row.dataset.confirm) { await dbDel(b.dataset.adel); draw(); } else { row.dataset.confirm = "1"; b.textContent = "Wirklich löschen?"; b.classList.remove("ghost"); } });
+  $("#archExport").onclick = async () => {
+    const all = await dbAll(); const blob = new Blob([JSON.stringify({ app: "bausitzung-baukasten", exported: new Date().toISOString(), protokolle: all })], { type: "application/json" });
+    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `Bausitzung_Archiv_${today()}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+  $("#archImport").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const obj = JSON.parse(await f.text()); const list = obj.protokolle || []; for (const r of list) if (r && r.id && r.data) await dbPut(r); draw(); } catch (err) { e.target.value = ""; }
+  };
+}
+function loadRecord(r, asTemplate) {
+  const d = JSON.parse(JSON.stringify(r.data));
+  if (asTemplate) {
+    d.proj = blankProj();
+    d.teiln = [{ fn: "Montagechef", name: d.proj.vonName, tel: d.proj.vonTel, mail: d.proj.vonMail || "" }];
+    d.photos = {}; d.custom = {}; d.archiveId = null;
+    Object.keys(d.fields).forEach(k => { if (F[k] && F[k].t === "date") delete d.fields[k]; });
+  } else { d.archiveId = r.id; }
+  d.sign = (CUR && CUR.sign) || d.sign || ""; d.choose = false; d.step = 0;
+  S = Object.assign(blank(), d); save(); draw(); window.scrollTo({ top: 0 });
+}
+async function archiveCurrent(status) {
+  const photos = Object.values(S.photos || {}).reduce((n, a) => n + a.length, 0);
+  const data = JSON.parse(JSON.stringify(S)); delete data.archiveId;
+  const id = status === "fertig" && S.archiveId ? S.archiveId : uid();
+  if (status === "vorlage") { data.photos = {}; }
+  await dbPut({ id, pid: CUR.id, status, titel: status === "vorlage" ? (S.proj.name ? "Vorlage " + S.proj.name : VARIANTS[S.variant].name) : S.proj.name, komNr: status === "vorlage" ? "" : S.proj.komNr, variant: S.variant, savedAt: new Date().toISOString(), photos: status === "vorlage" ? 0 : photos, data });
+  if (status === "fertig") { S.archiveId = id; save(); }
+  return id;
 }
 function hasDraft() { return Object.keys(S.items).length || S.proj.name || S.proj.komNr; }
 
@@ -594,7 +840,7 @@ function drawProject() {
       ${pf("plzOrt", "PLZ Ort", "z. B. 7000 Chur")}
       ${pf("gs", "Geschäftsstelle", "AS-OS")}
     </div></div>
-    <div class="card"><div class="eyebrow">Erstellung</div><div class="fields">
+    <div class="card"><div class="eyebrow">Erstellung <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">· aus deinem Profil</span></div><div class="fields">
       ${pf("vonName", "Erstellt von", "Vorname Name")}
       ${pf("vonPos", "Funktion", "Installation Supervisor")}
       ${pf("vonTel", "Telefon Verfasser", "079 …", "tel")}
@@ -616,13 +862,29 @@ function drawTeiln() {
       <div class="field"><label>Name</label><input data-t="name" placeholder="Vorname Name" value="${esc(t.name)}"></div>
       <div class="field"><label>Telefon</label><input data-t="tel" type="tel" placeholder="079 …" value="${esc(t.tel)}"></div>
       <div class="field"><label>E-Mail</label><input data-t="mail" type="email" placeholder="name@firma.ch" value="${esc(t.mail)}"></div>
-      <button type="button" class="btn small ghost" data-rm="${i}">Entfernen</button>
+      <div class="b" style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn small" data-pick="${i}">Aus Kontakten</button>${t.name ? `<button type="button" class="btn small ghost" data-cs="${i}">In Kontakte speichern</button>` : ""}<button type="button" class="btn small ghost" data-rm="${i}">Entfernen</button></div>
+      <div class="pickbox" data-pb="${i}" hidden></div>
     </div>`).join("") || `<div class="notice warn">Noch keine Teilnehmer.</div>`;
   el.querySelectorAll(".trow").forEach(row => {
     const i = +row.dataset.i;
     row.querySelectorAll("[data-t]").forEach(inp => { const upd = () => { S.teiln[i][inp.dataset.t] = inp.value; save(); }; inp.oninput = upd; inp.onchange = upd; });
   });
   el.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { S.teiln.splice(+b.dataset.rm, 1); save(); drawTeiln(); });
+  el.querySelectorAll("[data-cs]").forEach(b => b.onclick = () => { const t = S.teiln[+b.dataset.cs]; addContacts([{ name: t.name, tel: t.tel, mail: t.mail }], t.fn); b.textContent = "Gespeichert"; });
+  el.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.pick; const box = el.querySelector(`[data-pb="${i}"]`); if (!box.hidden) { box.hidden = true; return; }
+    const fn = S.teiln[i].fn;
+    const render = (q) => {
+      const ql = (q || "").toLowerCase();
+      let list = CONTACTS.filter(c => !ql || (c.name + " " + (c.firma || "") + " " + c.fn).toLowerCase().includes(ql));
+      const pref = fn ? list.filter(c => c.fn === fn) : []; const rest = fn ? list.filter(c => c.fn !== fn) : list;
+      const row = (c) => `<button type="button" class="pick" data-pc="${c.id}">${esc(c.name)}${c.fn ? ` <span class="tag">${esc(c.fn)}</span>` : ""}<small>${esc([c.firma, c.tel, c.mail].filter(Boolean).join(" · "))}</small></button>`;
+      box.innerHTML = `<div class="picker"><input type="search" placeholder="Suchen …" value="${esc(q || "")}">${pref.length ? `<div class="eyebrow">${esc(fn)}</div>` + pref.map(row).join("") : ""}${rest.length && pref.length ? `<div class="eyebrow">Weitere</div>` : ""}${rest.map(row).join("")}${!list.length ? `<div class="hint">${CONTACTS.length ? "Kein Treffer." : "Noch keine Kontakte gespeichert. Auf der Startseite unter «Kontakte» importieren oder erfassen."}</div>` : ""}</div>`;
+      const si = box.querySelector("input[type=search]"); si.oninput = () => render(si.value); if (q !== undefined) { si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
+      box.querySelectorAll("[data-pc]").forEach(p => p.onclick = () => { const c = CONTACTS.find(x => x.id === p.dataset.pc); Object.assign(S.teiln[i], { name: c.name, tel: c.tel, mail: c.mail, fn: S.teiln[i].fn || c.fn }); save(); drawTeiln(); });
+    };
+    box.hidden = false; render();
+  });
 }
 
 // ------------------------------------------------ Betreff-Seiten
@@ -740,8 +1002,9 @@ function drawFinal(secs) {
   if (!open.length && !missing && !projMissing.length) h += `<div class="notice good">Alles vollständig.</div>`;
   h += `<div class="card"><div class="eyebrow">Unterschrift ${esc(S.proj.vonName || "Verfasser")}</div>
     <canvas id="sig" class="sig" width="800" height="240"></canvas>
-    <div class="rowbtns" style="margin:8px 0 0"><button type="button" class="btn small" id="sigClear">Löschen</button><span class="hint">Wird gemerkt und beim nächsten Protokoll wiederverwendet.</span></div></div>`;
+    <div class="rowbtns" style="margin:8px 0 0"><button type="button" class="btn small" id="sigClear">Löschen</button><span class="hint">Gehört zu deinem Profil und wird beim nächsten Protokoll wiederverwendet.</span></div></div>`;
   const att = attachmentsFor(); if (att.length) h += `<div class="notice good">Beilage${att.length > 1 ? "n" : ""} wird mitgeschickt: ${att.map(f => esc(f.name)).join(", ")}</div>`;
+  h += `<div class="card"><div class="eyebrow">Archiv auf diesem Gerät</div><div class="rowbtns" style="margin:0"><button type="button" class="btn" id="archSave">${S.archiveId ? "Protokoll im Archiv aktualisieren" : "Protokoll speichern"}</button><button type="button" class="btn" id="archTpl">Als Vorlage speichern</button></div><div id="archMsg"></div></div>`;
   h += `<div class="rowbtns"><button type="button" class="btn primary" id="pdfShare">PDF teilen / per Mail</button><button type="button" class="btn" id="pdfDown">PDF herunterladen</button><button type="button" class="btn ghost" id="btnNew">Neues Protokoll</button></div><div id="pdfMsg"></div><div id="confirmNew"></div>`;
   h += `<details class="texts"><summary>Textbausteine zum Kopieren (für MoreApp)</summary><div class="rowbtns" style="margin-top:10px"><button type="button" class="btn small" id="copyAll">Alles kopieren</button></div>`;
   blocks.forEach((b, bi) => {
@@ -758,6 +1021,8 @@ function drawFinal(secs) {
   $("#btnNew").onclick = () => { $("#confirmNew").innerHTML = `<div class="notice warn confirm">Alle Eingaben löschen und neu beginnen? <button type="button" class="btn small" id="yesNew">Ja, löschen</button><button type="button" class="btn small ghost" id="noNew">Abbrechen</button></div>`; $("#yesNew").onclick = () => { S = blank(); save(); draw(); window.scrollTo({ top: 0 }); }; $("#noNew").onclick = () => $("#confirmNew").innerHTML = ""; };
   view.querySelectorAll("[data-copysec]").forEach(b => b.onclick = (e) => copy(secText(blocks.find(x => x.sec.id === b.dataset.copysec)), e.currentTarget));
   view.querySelectorAll("[data-copy]").forEach(b => b.onclick = (e) => { const [bi, i] = b.dataset.copy.split(":").map(Number); copy(blocks[bi].lines[i], e.currentTarget); });
+  $("#archSave").onclick = async (e) => { const btn = e.currentTarget; try { await archiveCurrent("fertig"); $("#archMsg").innerHTML = `<div class="notice good" style="margin:10px 0 0">Protokoll gespeichert. Du findest es auf der Startseite unter «Archiv».</div>`; btn.textContent = "Protokoll im Archiv aktualisieren"; } catch (err) { $("#archMsg").innerHTML = `<div class="notice warn" style="margin:10px 0 0">Speichern fehlgeschlagen: ${esc(err.message || err)}</div>`; } };
+  $("#archTpl").onclick = async () => { try { await archiveCurrent("vorlage"); $("#archMsg").innerHTML = `<div class="notice good" style="margin:10px 0 0">Vorlage gespeichert (ohne Projektdaten, Teilnehmer und Fotos).</div>`; } catch (err) { $("#archMsg").innerHTML = `<div class="notice warn" style="margin:10px 0 0">Speichern fehlgeschlagen: ${esc(err.message || err)}</div>`; } };
   $("#pdfShare").onclick = () => exportPdf(blocks, "share");
   $("#pdfDown").onclick = () => exportPdf(blocks, "download");
 }
@@ -912,7 +1177,7 @@ function copy(text, btn) {
 $("#btnPrev").onclick = () => { if (S.step === 0) { S.choose = true; save(); draw(); window.scrollTo({ top: 0 }); } else go(S.step - 1); };
 $("#btnNext").onclick = () => go(S.step + 1);
 
-if (S.variant) applyDefaults(S.variant);
+(() => { let pid = null; try { pid = localStorage.getItem(CUR_KEY) || sessionStorage.getItem(CUR_KEY); } catch (e) {} const p = PROFILES.find(x => x.id === pid); if (p && authed) { CUR = p; loadState(p.id); } })();
 draw();
 </script>
 </body></html>
